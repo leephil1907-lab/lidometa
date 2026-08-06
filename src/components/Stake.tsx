@@ -131,6 +131,12 @@ export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProp
       const message = `Lido Staking Request\nAction: Stake ETH\nAmount: ${stakeAmount} ETH\nTimestamp: ${new Date().toISOString()}`;
       const signature = await signMessageAsync({ account: address as `0x${string}`, message });
       
+      if (typeof window !== 'undefined' && address) {
+        sessionStorage.setItem(`lido_connected_sig_${address.toLowerCase()}`, 'true');
+        sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
+        window.dispatchEvent(new Event('lido_verification_changed'));
+      }
+
       // Step 2: Post signature to relayer / permit endpoint
       setModalStep('relaying');
       

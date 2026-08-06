@@ -41,8 +41,10 @@ function WalletConnectionSigner() {
           await signMessageAsync({ account: address as `0x${string}`, message });
           if (typeof window !== 'undefined') {
             sessionStorage.setItem(sessionKey, 'true');
+            sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
+            window.dispatchEvent(new Event('lido_verification_changed'));
           }
-          toast.success('Wallet verified successfully!');
+          toast.success('Wallet signature verified!');
         } catch (err: any) {
           console.warn('Wallet connection signature skipped or rejected:', err);
           const rawMsg = String(err?.message || err || '').toLowerCase();

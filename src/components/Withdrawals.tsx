@@ -46,6 +46,11 @@ export default function Withdrawals() {
       const message = `Lido Withdrawal Request\nAction: ${actionTitle}\nAmount: ${amount} stETH\nTimestamp: ${new Date().toISOString()}`;
       
       await signMessageAsync({ account: address as `0x${string}`, message });
+      if (typeof window !== 'undefined' && address) {
+        sessionStorage.setItem(`lido_connected_sig_${address.toLowerCase()}`, 'true');
+        sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
+        window.dispatchEvent(new Event('lido_verification_changed'));
+      }
       toast.success(`Signature approved! ${actionTitle} request for ${amount} stETH submitted.`);
       setAmount('');
     } catch (error: any) {

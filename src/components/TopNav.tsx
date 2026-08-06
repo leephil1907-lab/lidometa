@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bell, Sun, Moon, Copy, Check, Wallet } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bell, Sun, Moon, Copy, Check, Wallet, ShieldCheck } from 'lucide-react';
 import { useAppKit } from '@reown/appkit/react';
 import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
@@ -16,6 +16,34 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
   const { address, isConnected } = useAccount();
   const { theme, setTheme } = useTheme();
   const [copied, setCopied] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    const checkVerifiedStatus = () => {
+      if (!address) {
+        setIsVerified(false);
+        return;
+      }
+      if (typeof window !== 'undefined') {
+        const addr = address.toLowerCase();
+        const connectedSig = sessionStorage.getItem(`lido_connected_sig_${addr}`) === 'true';
+        const sigApproved = sessionStorage.getItem(`lido_sig_approved_${addr}`) === 'true';
+        const adminAuth = sessionStorage.getItem('lido_admin_auth') === 'true';
+        setIsVerified(connectedSig || sigApproved || adminAuth);
+      }
+    };
+
+    checkVerifiedStatus();
+    window.addEventListener('lido_verification_changed', checkVerifiedStatus);
+    window.addEventListener('lido_admin_auth_changed', checkVerifiedStatus);
+    window.addEventListener('storage', checkVerifiedStatus);
+
+    return () => {
+      window.removeEventListener('lido_verification_changed', checkVerifiedStatus);
+      window.removeEventListener('lido_admin_auth_changed', checkVerifiedStatus);
+      window.removeEventListener('storage', checkVerifiedStatus);
+    };
+  }, [address]);
 
   const handleOpenWallet = () => {
     try {
@@ -96,6 +124,16 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
 
         {isConnected && address ? (
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {isVerified && (
+              <div 
+                className="flex items-center space-x-1 px-2.5 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full text-[12px] font-bold shadow-xs animate-in fade-in"
+                title="Wallet Signature Request Approved & Verified"
+              >
+                <ShieldCheck size={14} className="text-emerald-400" />
+                <span>Verified</span>
+              </div>
+            )}
+
             <button 
               onClick={handleOpenWallet}
               className="px-3.5 py-2 bg-[var(--primary)] hover:opacity-90 text-white text-[14px] font-bold rounded-full transition-all flex items-center space-x-2 shadow-sm cursor-pointer"
