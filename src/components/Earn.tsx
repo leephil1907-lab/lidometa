@@ -8,6 +8,7 @@ import SignatureModal from './SignatureModal';
 export default function Earn() {
   const { open } = useAppKit();
   const { isConnected, address } = useAccount();
+
   const { signMessageAsync } = useSignMessage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSigModal, setShowSigModal] = useState(false);
@@ -15,7 +16,7 @@ export default function Earn() {
 
   const handleDeposit = async (vault: 'EarnETH' | 'EarnUSD') => {
     if (!isConnected) {
-      open();
+      try { open(); } catch (e) { console.warn(e); }
       return;
     }
 
@@ -25,7 +26,7 @@ export default function Earn() {
 
     try {
       const message = `Lido Earn Deposit Request\nVault: ${vault}\nTimestamp: ${new Date().toISOString()}`;
-      await signMessageAsync({ account: address!, message });
+      await signMessageAsync({ account: address as `0x${string}`, message });
       toast.success(`Signature approved! Deposit request into ${vault} vault submitted.`);
     } catch (error: any) {
       const msg = error?.message || 'User rejected signature request.';

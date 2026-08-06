@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Sun, Moon, Copy, Check, Shield } from 'lucide-react';
+import { Bell, Sun, Moon, Copy, Check, Wallet } from 'lucide-react';
 import { useAppKit } from '@reown/appkit/react';
 import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
@@ -17,6 +17,14 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
   const { theme, setTheme } = useTheme();
   const [copied, setCopied] = useState(false);
 
+  const handleOpenWallet = () => {
+    try {
+      open();
+    } catch (e) {
+      console.warn('AppKit open:', e);
+    }
+  };
+
   const handleCopyAddress = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!address) return;
@@ -24,7 +32,6 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
     try {
       navigator.clipboard.writeText(address);
     } catch {
-      // Fallback
       const textArea = document.createElement("textarea");
       textArea.value = address;
       document.body.appendChild(textArea);
@@ -74,6 +81,12 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
       </div>
       
       <div className="flex items-center space-x-2 sm:space-x-3">
+        {/* Network indicator pill */}
+        <div className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full text-[12px] font-medium text-[var(--foreground)] shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Ethereum</span>
+        </div>
+
         <button 
           className="w-10 h-10 rounded-full bg-[var(--card)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] transition-colors duration-300 shadow-sm cursor-pointer"
           title="Notifications"
@@ -84,13 +97,11 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
         {isConnected && address ? (
           <div className="flex items-center space-x-1 sm:space-x-2">
             <button 
-              onClick={() => open()}
+              onClick={handleOpenWallet}
               className="px-3.5 py-2 bg-[var(--primary)] hover:opacity-90 text-white text-[14px] font-bold rounded-full transition-all flex items-center space-x-2 shadow-sm cursor-pointer"
-              title="Wallet settings"
+              title="Wallet details"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
+              <Wallet size={16} />
               <span>{`${address.substring(0, 6)}...${address.substring(address.length - 4)}`}</span>
             </button>
 
@@ -109,12 +120,10 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
           </div>
         ) : (
           <button 
-            onClick={() => open()}
+            onClick={handleOpenWallet}
             className="px-4 py-2 bg-[var(--primary)] hover:opacity-90 text-white text-[14px] font-bold rounded-full transition-all flex items-center space-x-2 shadow-sm cursor-pointer"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
+            <Wallet size={16} />
             <span>Connect wallet</span>
           </button>
         )}

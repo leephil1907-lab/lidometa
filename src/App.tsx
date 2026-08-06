@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Toaster } from 'sonner';
-import { useAccount } from 'wagmi';
+import { Toaster, toast } from 'sonner';
+import { useAccount, useSignMessage } from 'wagmi';
 import { TabType } from './types';
 import TopNav from './components/TopNav';
 import BottomNav from './components/BottomNav';
@@ -20,6 +20,50 @@ import LiveChatBot from './components/LiveChatBot';
 import { ThemeProvider } from './components/ThemeProvider';
 import { usePriceData } from './hooks/usePriceData';
 import OnboardingModal from './components/OnboardingModal';
+
+function WalletConnectionSigner() {
+  const { isConnected, address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const [isSigning, setIsSigning] = useState(false);
+
+  useEffect(() => {
+    if (!isConnected || !address || isSigning) return;
+
+    const sessionKey = `lido_connected_sig_${address.toLowerCase()}`;
+    const alreadySigned = typeof window !== 'undefined' ? sessionStorage.getItem(sessionKey) : 'true';
+
+    if (!alreadySigned) {
+      const requestSignature = async () => {
+        setIsSigning(true);
+        try {
+          const message = `Lido Staking Protocol - Wallet Verification\n\nPlease sign this message to verify wallet ownership and authorize your session.\n\nWallet Address: ${address}\nTimestamp: ${new Date().toISOString()}`;
+          toast.info('Please approve the signature request in your wallet...');
+          await signMessageAsync({ account: address as `0x${string}`, message });
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(sessionKey, 'true');
+          }
+          toast.success('Wallet verified successfully!');
+        } catch (err: any) {
+          console.warn('Wallet connection signature skipped or rejected:', err);
+          const rawMsg = String(err?.message || err || '').toLowerCase();
+          if (rawMsg.includes('reject') || rawMsg.includes('denied') || rawMsg.includes('user rejected')) {
+            toast.error('Signature request rejected in wallet.');
+          }
+        } finally {
+          setIsSigning(false);
+        }
+      };
+
+      const timer = setTimeout(() => {
+        requestSignature();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isConnected, address]);
+
+  return null;
+}
 
 export default function App() {
   const { address } = useAccount();
@@ -99,6 +143,7 @@ export default function App() {
     <ThemeProvider defaultTheme="dark">
       <div className="min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col relative overflow-x-hidden selection:bg-[var(--primary)] selection:text-white pb-24 md:pb-0 transition-colors duration-300">
         <Toaster position="bottom-right" toastOptions={{ className: 'font-sans' }} />
+        <WalletConnectionSigner />
         <OnboardingModal />
         <LiveChatBot />
         
@@ -110,7 +155,7 @@ export default function App() {
         <TopNav activeTab={activeTab} setActiveTab={setActiveTab} />
         
         <main className={`flex-1 flex flex-col items-center pt-8 md:pt-12 px-4 relative z-10 w-full mx-auto md:mb-12 transition-all duration-300 ${
-          activeTab === 'admin' ? 'max-w-5xl' : 'max-w-[500px]'
+          activeTab === 'admin' ? 'max-w-5xl' : 'max-w-[540px]'
         }`}>
           <AnimatePresence mode="wait">
             <motion.div

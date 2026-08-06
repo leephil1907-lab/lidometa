@@ -10,6 +10,7 @@ import SignatureModal from './SignatureModal';
 export default function Withdrawals() {
   const { open } = useAppKit();
   const { isConnected, address } = useAccount();
+
   const { data: balanceData } = useBalance({ address });
   const { signMessageAsync } = useSignMessage();
   const [amount, setAmount] = useState('');
@@ -28,7 +29,7 @@ export default function Withdrawals() {
 
   const handleSubmit = async () => {
     if (!isConnected) {
-      open();
+      try { open(); } catch (e) { console.warn(e); }
       return;
     }
 
@@ -43,7 +44,8 @@ export default function Withdrawals() {
     try {
       const actionTitle = mode === 'request' ? `Request Withdrawal (${method.toUpperCase()})` : 'Claim ETH Withdrawal';
       const message = `Lido Withdrawal Request\nAction: ${actionTitle}\nAmount: ${amount} stETH\nTimestamp: ${new Date().toISOString()}`;
-      await signMessageAsync({ account: address!, message });
+      
+      await signMessageAsync({ account: address as `0x${string}`, message });
       toast.success(`Signature approved! ${actionTitle} request for ${amount} stETH submitted.`);
       setAmount('');
     } catch (error: any) {

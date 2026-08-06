@@ -12,7 +12,7 @@ import {
 import { mainnet } from "viem/chains";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.set("trust proxy", 1);
 app.use(express.json());
@@ -43,12 +43,12 @@ app.post("/api/verify", async (req, res) => {
 
     if (result.success) {
       (req.session as any).siwe = result.data;
-      res.status(200).send(true);
+      res.status(200).json({ success: true, address: result.data.address });
     } else {
-      res.status(400).send(false);
+      res.status(400).json({ success: false, error: "Signature verification failed" });
     }
-  } catch (e) {
-    res.status(400).send(false);
+  } catch (e: any) {
+    res.status(400).json({ success: false, error: e?.message || "Invalid SIWE payload" });
   }
 });
 

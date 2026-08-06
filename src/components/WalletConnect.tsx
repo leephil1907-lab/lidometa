@@ -74,6 +74,11 @@ export default function WalletConnect() {
       setAddress(walletAddress);
       setSignature(signedMessage);
       setVerified(true);
+
+      sessionStorage.setItem('lido_admin_auth', 'true');
+      sessionStorage.setItem('lido_demo_wallet', walletAddress);
+      window.dispatchEvent(new Event('lido_admin_auth_changed'));
+      window.dispatchEvent(new CustomEvent('lido_wallet_connected', { detail: { address: walletAddress } }));
     } catch (err: any) {
       setError(err?.message || "Something went wrong during sign in");
     } finally {

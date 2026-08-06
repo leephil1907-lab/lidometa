@@ -62,11 +62,13 @@ const generateChartData = (days: number, userBalance: number = 0) => {
 
 export default function Rewards({ prices = { eth: 3000, steth: 3000 } }: RewardsProps) {
   const { open } = useAppKit();
-  const { isConnected } = useAccount();
+  const { isConnected, address: wagmiAddress } = useAccount();
   const [addressInput, setAddressInput] = useState('');
   const { theme } = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('30D');
   const [chartData, setChartData] = useState<any[]>([]);
+
+  const address = wagmiAddress || addressInput;
 
   useEffect(() => {
     const periodDays = {
