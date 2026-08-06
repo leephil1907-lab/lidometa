@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
-import { MessageSquare, X, Send, Bot, Shield, Sparkles, User, Minimize2, Move, GripHorizontal } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { MessageSquare, X, Send, Bot, Shield, Sparkles, User, Minimize2, GripHorizontal } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { ChatMessage } from '../types';
 
@@ -96,195 +96,242 @@ export default function LiveChatBot() {
   };
 
   return (
-    <motion.div
-      drag
-      dragMomentum={false}
-      className="fixed bottom-5 right-5 z-50 font-sans touch-none select-none"
-    >
-      {/* Floating Launcher Button */}
-      {!isOpen && (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsOpen(true)}
-          className="relative group bg-[var(--card)] hover:bg-[var(--card)]/90 border border-[var(--primary)]/40 p-3.5 rounded-full shadow-[0_8px_30px_rgba(0,163,255,0.35)] text-white flex items-center space-x-3 transition-all duration-300 cursor-grab active:cursor-grabbing"
-          title="Drag to reposition or click to open Lido Live Chat"
-        >
-          <div className="relative w-9 h-9 rounded-full bg-[var(--primary)]/10 p-1 flex items-center justify-center border border-[var(--primary)]/30">
-            <img
-              src="https://cryptologos.cc/logos/lido-dao-ldo-logo.svg"
-              alt="Lido Avatar"
-              className="w-full h-full object-contain pointer-events-none"
-            />
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[var(--card)]" />
-          </div>
+    <div className="fixed bottom-5 right-5 z-50 font-sans pointer-events-none">
+      <AnimatePresence mode="wait">
+        {/* Floating Launcher Button */}
+        {!isOpen && (
+          <motion.div
+            key="chat-launcher"
+            drag
+            dragMomentum={false}
+            dragConstraints={{ left: -300, right: 0, top: -500, bottom: 0 }}
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: [0, -6, 0],
+            }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{
+              y: {
+                duration: 3,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut"
+              },
+              opacity: { duration: 0.2 },
+              scale: { duration: 0.2 }
+            }}
+            className="pointer-events-auto cursor-grab active:cursor-grabbing"
+          >
+            <motion.button
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={() => setIsOpen(true)}
+              className="relative group bg-[var(--card)] hover:bg-[var(--card)]/90 border border-[var(--primary)]/50 p-3.5 rounded-full shadow-[0_8px_30px_rgba(0,163,255,0.4)] text-white flex items-center space-x-3 transition-all duration-300"
+              title="Click to open Lido Live Support or drag to move"
+            >
+              {/* Outer pulsing aura */}
+              <span className="absolute -inset-1 rounded-full bg-[var(--primary)]/20 animate-ping opacity-30 pointer-events-none" />
 
-          <div className="hidden sm:flex flex-col text-left pr-1 pointer-events-none">
-            <span className="text-[13px] font-bold text-[var(--foreground)] flex items-center gap-1.5">
-              Lido Assistant
-              <Sparkles size={12} className="text-[var(--primary)]" />
-            </span>
-            <span className="text-[11px] text-[var(--muted)] flex items-center gap-1">
-              <span>Ask anything / Live Admin</span>
-              <GripHorizontal size={12} className="text-[var(--muted)] opacity-60" />
-            </span>
-          </div>
-
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-rose-500 text-white font-bold text-[11px] w-5 h-5 rounded-full flex items-center justify-center shadow-md animate-pulse">
-              {unreadCount}
-            </span>
-          )}
-        </motion.button>
-      )}
-
-      {/* Expanded Chat Dialog */}
-      {isOpen && (
-        <div className="w-[360px] sm:w-[400px] h-[520px] bg-[var(--card)] border border-[var(--border)] rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden backdrop-blur-xl transition-all duration-300">
-          {/* Draggable Header */}
-          <div className="p-3.5 bg-[var(--nav-bg)] border-b border-[var(--border)] flex items-center justify-between cursor-grab active:cursor-grabbing select-none">
-            <div className="flex items-center space-x-2.5">
-              <span title="Drag to move chat window">
-                <GripHorizontal size={16} className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors" />
-              </span>
-              
-              <div className="relative w-8 h-8 rounded-full bg-[var(--primary)]/15 p-1 flex items-center justify-center border border-[var(--primary)]/30">
+              <div className="relative w-9 h-9 rounded-full bg-[var(--primary)]/15 p-1 flex items-center justify-center border border-[var(--primary)]/40 shrink-0">
                 <img
                   src="https://cryptologos.cc/logos/lido-dao-ldo-logo.svg"
-                  alt="Lido Logo Avatar"
+                  alt="Lido Avatar"
                   className="w-full h-full object-contain pointer-events-none"
                 />
-                <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-[var(--card)]" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[var(--card)] shadow-xs" />
               </div>
 
-              <div>
-                <div className="flex items-center space-x-1.5">
-                  <span className="font-bold text-[13px] text-[var(--foreground)]">Lido Live Support</span>
-                  {isAdminConnected ? (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                      <Shield size={9} /> Admin Active
-                    </span>
-                  ) : (
-                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-[var(--primary)]/15 text-[var(--primary)] flex items-center gap-1">
-                      <Bot size={9} /> Bot Online
-                    </span>
-                  )}
+              <div className="hidden sm:flex flex-col text-left pr-1 pointer-events-none">
+                <span className="text-[13px] font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                  Lido Assistant
+                  <Sparkles size={12} className="text-[var(--primary)] animate-pulse" />
+                </span>
+                <span className="text-[11px] text-[var(--muted)] flex items-center gap-1">
+                  <span>Live 24/7 Support</span>
+                  <GripHorizontal size={12} className="text-[var(--muted)] opacity-60 ml-1" />
+                </span>
+              </div>
+
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white font-bold text-[11px] w-5.5 h-5.5 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                  {unreadCount}
+                </span>
+              )}
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* Expanded Chat Dialog */}
+        {isOpen && (
+          <motion.div
+            key="chat-dialog"
+            drag
+            dragMomentum={false}
+            dragConstraints={{ left: -400, right: 0, top: -600, bottom: 0 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            transition={{ type: "spring", stiffness: 350, damping: 28 }}
+            className="pointer-events-auto w-[360px] sm:w-[400px] h-[520px] bg-[var(--card)] border border-[var(--border)] rounded-[24px] shadow-[0_25px_60px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden backdrop-blur-2xl transition-all duration-300"
+          >
+            {/* Draggable Header */}
+            <div className="p-3.5 bg-[var(--nav-bg)] border-b border-[var(--border)] flex items-center justify-between cursor-grab active:cursor-grabbing select-none shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <span title="Drag to move chat window">
+                  <GripHorizontal size={16} className="text-[var(--muted)] hover:text-[var(--primary)] transition-colors" />
+                </span>
+                
+                <div className="relative w-8 h-8 rounded-full bg-[var(--primary)]/15 p-1 flex items-center justify-center border border-[var(--primary)]/30 shrink-0">
+                  <img
+                    src="https://cryptologos.cc/logos/lido-dao-ldo-logo.svg"
+                    alt="Lido Logo Avatar"
+                    className="w-full h-full object-contain pointer-events-none"
+                  />
+                  <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-[var(--card)]" />
                 </div>
-                <p className="text-[10px] text-[var(--muted)] flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-                  {isAdminConnected ? 'Live Admin monitoring' : 'Instant AI bot & Admin bridge'}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--input-bg)] rounded-lg transition-colors cursor-pointer"
-                title="Minimize chat"
-              >
-                <Minimize2 size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 scrollbar-thin select-text cursor-default">
-            {messages.map((msg) => {
-              const isUser = msg.sender === 'user';
-              const isAdmin = msg.sender === 'admin';
-
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex items-start space-x-2.5 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}
-                >
-                  {/* Avatar */}
-                  <div className="shrink-0">
-                    {isUser ? (
-                      <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-white text-[12px]">
-                        <User size={14} />
-                      </div>
-                    ) : isAdmin ? (
-                      <div className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-500/50 p-1 flex items-center justify-center">
-                        <Shield size={14} className="text-amber-400" />
-                      </div>
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="font-bold text-[13px] text-[var(--foreground)]">Lido Live Support</span>
+                    {isAdminConnected ? (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                        <Shield size={9} /> Admin Active
+                      </span>
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-[var(--primary)]/20 border border-[var(--primary)]/40 p-1 flex items-center justify-center">
-                        <img
-                          src="https://cryptologos.cc/logos/lido-dao-ldo-logo.svg"
-                          alt="Lido Avatar"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-[var(--primary)]/15 text-[var(--primary)] flex items-center gap-1">
+                        <Bot size={9} /> Bot Online
+                      </span>
                     )}
                   </div>
-
-                  {/* Message Bubble */}
-                  <div
-                    className={`max-w-[75%] p-3 rounded-[16px] text-[13px] leading-relaxed shadow-sm ${
-                      isUser
-                        ? 'bg-[var(--primary)] text-white rounded-tr-none'
-                        : isAdmin
-                        ? 'bg-amber-950/40 border border-amber-500/30 text-amber-100 rounded-tl-none'
-                        : 'bg-[var(--nav-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-tl-none'
-                    }`}
-                  >
-                    {!isUser && (
-                      <div className="text-[10px] font-bold mb-1 opacity-70 flex items-center justify-between">
-                        <span>{isAdmin ? '🛡️ Lido Admin' : '🤖 Lido Assistant'}</span>
-                      </div>
-                    )}
-                    <p>{msg.text}</p>
-                    <span className="text-[9px] opacity-50 block text-right mt-1">
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
+                  <p className="text-[10px] text-[var(--muted)] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                    {isAdminConnected ? 'Live Admin monitoring' : 'Instant AI bot & Admin bridge'}
+                  </p>
                 </div>
-              );
-            })}
-            <div ref={messagesEndRef} />
-          </div>
+              </div>
 
-          {/* Quick Option Prompts */}
-          <div className="px-3 py-2 bg-[var(--nav-bg)]/50 border-t border-[var(--border)] flex items-center space-x-1.5 overflow-x-auto scrollbar-none select-none">
-            {[
-              'stETH APR?',
-              'How to stake?',
-              'Wrap to wstETH',
-              'Request Admin Support',
-            ].map((prompt, idx) => (
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--input-bg)] rounded-lg transition-colors cursor-pointer"
+                  title="Minimize chat"
+                >
+                  <Minimize2 size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Messages Area */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 scrollbar-thin select-text cursor-default">
+              {messages.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--muted)]">
+                  <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center mb-3">
+                    <MessageSquare size={22} />
+                  </div>
+                  <p className="text-[13px] font-semibold text-[var(--foreground)] mb-1">Welcome to Lido Support</p>
+                  <p className="text-[11px]">Ask a question about ETH staking, APY rates, or request live admin support below.</p>
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isUser = msg.sender === 'user';
+                  const isAdmin = msg.sender === 'admin';
+
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex items-start space-x-2.5 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}
+                    >
+                      {/* Avatar */}
+                      <div className="shrink-0">
+                        {isUser ? (
+                          <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-white text-[12px]">
+                            <User size={14} />
+                          </div>
+                        ) : isAdmin ? (
+                          <div className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-500/50 p-1 flex items-center justify-center">
+                            <Shield size={14} className="text-amber-400" />
+                          </div>
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-[var(--primary)]/20 border border-[var(--primary)]/40 p-1 flex items-center justify-center">
+                            <img
+                              src="https://cryptologos.cc/logos/lido-dao-ldo-logo.svg"
+                              alt="Lido Avatar"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Message Bubble */}
+                      <div
+                        className={`max-w-[78%] p-3 rounded-[16px] text-[13px] leading-relaxed shadow-xs ${
+                          isUser
+                            ? 'bg-[var(--primary)] text-white rounded-tr-none'
+                            : isAdmin
+                            ? 'bg-amber-950/40 border border-amber-500/30 text-amber-100 rounded-tl-none'
+                            : 'bg-[var(--nav-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-tl-none'
+                        }`}
+                      >
+                        {!isUser && (
+                          <div className="text-[10px] font-bold mb-1 opacity-70 flex items-center justify-between">
+                            <span>{isAdmin ? '🛡️ Lido Admin' : '🤖 Lido Assistant'}</span>
+                          </div>
+                        )}
+                        <p className="break-words">{msg.text}</p>
+                        <span className="text-[9px] opacity-50 block text-right mt-1">
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Quick Option Prompts */}
+            <div className="px-3 py-2 bg-[var(--nav-bg)]/50 border-t border-[var(--border)] flex items-center space-x-1.5 overflow-x-auto scrollbar-none select-none shrink-0">
+              {[
+                'stETH APR?',
+                'How to stake?',
+                'Wrap to wstETH',
+                'Request Admin Support',
+              ].map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(prompt)}
+                  className="shrink-0 text-[11px] font-medium bg-[var(--card)] hover:bg-[var(--primary)]/15 hover:text-[var(--primary)] border border-[var(--border)] text-[var(--muted)] px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
+            {/* Input Box */}
+            <div className="p-3 bg-[var(--nav-bg)] border-t border-[var(--border)] flex items-center space-x-2 select-none shrink-0">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder={isAdminConnected ? 'Message Lido Admin...' : 'Ask Lido Bot or request support...'}
+                className="flex-1 bg-[var(--card)] border border-[var(--border)] rounded-full px-4 py-2 text-[13px] text-[var(--foreground)] placeholder-[var(--input-placeholder)] outline-none focus:border-[var(--primary)] transition-colors select-text"
+              />
               <button
-                key={idx}
-                onClick={() => handleSend(prompt)}
-                className="shrink-0 text-[11px] font-medium bg-[var(--card)] hover:bg-[var(--primary)]/15 hover:text-[var(--primary)] border border-[var(--border)] text-[var(--muted)] px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+                onClick={() => handleSend()}
+                disabled={!input.trim() || isSending}
+                className="w-9 h-9 rounded-full bg-[var(--primary)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+                title="Send message"
               >
-                {prompt}
+                <Send size={15} />
               </button>
-            ))}
-          </div>
-
-          {/* Input Box */}
-          <div className="p-3 bg-[var(--nav-bg)] border-t border-[var(--border)] flex items-center space-x-2 select-none">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder={isAdminConnected ? 'Message Lido Admin...' : 'Ask Lido Bot or request support...'}
-              className="flex-1 bg-[var(--card)] border border-[var(--border)] rounded-full px-4 py-2 text-[13px] text-[var(--foreground)] placeholder-[var(--input-placeholder)] outline-none focus:border-[var(--primary)] transition-colors select-text"
-            />
-            <button
-              onClick={() => handleSend()}
-              disabled={!input.trim() || isSending}
-              className="w-9 h-9 rounded-full bg-[var(--primary)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
-              title="Send message"
-            >
-              <Send size={15} />
-            </button>
-          </div>
-        </div>
-      )}
-    </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
+
