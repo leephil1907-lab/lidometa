@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Sun, Moon, Copy, Check, Wallet, ShieldCheck } from 'lucide-react';
+import { Bell, Sun, Moon, Copy, Check, Wallet, Zap, Box, ArrowDownCircle, TrendingUp } from 'lucide-react';
 import { useAppKit } from '@reown/appkit/react';
 import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
@@ -10,6 +10,14 @@ interface TopNavProps {
   activeTab?: TabType;
   setActiveTab?: (tab: TabType) => void;
 }
+
+const NAV_TABS = [
+  { id: 'stake', label: 'Stake', icon: Zap, isNew: false },
+  { id: 'wrap', label: 'Wrap', icon: Box, isNew: false },
+  { id: 'withdrawals', label: 'Withdrawals', icon: ArrowDownCircle, isNew: false },
+  { id: 'rewards', label: 'Rewards', icon: Wallet, isNew: false },
+  { id: 'earn', label: 'Earn', icon: TrendingUp, isNew: true },
+] as const;
 
 export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
   const { open } = useAppKit();
@@ -92,18 +100,31 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
         </div>
         
         {activeTab && setActiveTab && (
-          <div className="hidden md:flex items-center space-x-6">
-            {['stake', 'wrap', 'withdrawals', 'rewards', 'earn'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab as TabType)}
-                className={`text-[14px] font-medium capitalize transition-colors duration-300 cursor-pointer ${
-                  activeTab === tab ? 'text-[var(--primary)] font-semibold' : 'text-[var(--muted)] hover:text-[var(--foreground)]'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+            {NAV_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as TabType)}
+                  className={`relative px-3.5 py-2 rounded-xl text-[14px] font-semibold flex items-center space-x-2 transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? 'bg-[var(--card)] text-[var(--primary)] shadow-xs'
+                      : 'text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card)]/50'
+                  }`}
+                >
+                  <Icon size={18} className={isActive ? 'text-[var(--primary)]' : 'text-[var(--muted)]'} />
+                  <span>{tab.label}</span>
+                  {tab.isNew && (
+                    <span className="bg-[#FF4B4B] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md tracking-wider leading-none shadow-xs ml-0.5">
+                      NEW
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

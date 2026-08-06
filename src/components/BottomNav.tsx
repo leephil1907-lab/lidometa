@@ -1,6 +1,6 @@
 import React from 'react';
 import { TabType } from '../types';
-import { Zap, Box, ArrowDownCircle, TrendingUp, BarChart2, Shield } from 'lucide-react';
+import { Zap, Box, ArrowDownCircle, Wallet, TrendingUp } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -11,9 +11,9 @@ export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
   const tabs = [
     { id: 'stake', label: 'Stake', icon: Zap, isNew: false },
     { id: 'wrap', label: 'Wrap', icon: Box, isNew: false },
-    { id: 'withdrawals', label: 'Withdraw', icon: ArrowDownCircle, isNew: false },
-    { id: 'rewards', label: 'Rewards', icon: TrendingUp, isNew: false },
-    { id: 'earn', label: 'Earn', icon: BarChart2, isNew: false },
+    { id: 'withdrawals', label: 'Withdrawals', icon: ArrowDownCircle, isNew: false },
+    { id: 'rewards', label: 'Rewards', icon: Wallet, isNew: false },
+    { id: 'earn', label: 'Earn', icon: TrendingUp, isNew: true },
   ] as const;
 
   return (
