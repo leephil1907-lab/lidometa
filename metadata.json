@@ -1,0 +1,6 @@
+{
+  "name": "Lido Staking",
+  "description": "Liquid ETH staking interface built on Lido protocol standards with interactive Web3 tools, yield statistics, and staking management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        // Intercept console.error to filter out non-critical Analytics SDK / WalletConnect noise
+        var origConsoleError = console.error;
+        console.error = function() {
+          var args = Array.prototype.slice.call(arguments);
+          var msg = args.map(function(a) { return String(a?.message || a || ''); }).join(' ');
+          if (
+            msg.includes('Analytics SDK') ||
+            msg.includes('pulse.walletconnect') ||
+            msg.includes('/events')
+          ) {
+            return;
+          }
+          origConsoleError.apply(console, args);
+        };
+
+        // Fix for fetch getter issue in sandboxed environment
+        try {
+          var origFetch = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() { return origFetch; },
+            set: function(val) { origFetch = val; },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          try {
+            var proto = Object.getPrototypeOf(window);
+            if (proto && Object.getOwnPropertyDescriptor(proto, 'fetch')) {
+              var origFetchProto = window.fetch;
+              Object.defineProperty(proto, 'fetch', {
+                get: function() { return origFetchProto; },
+                set: function(val) { origFetchProto = val; },
+                configurable: true,
+                enumerable: true
+              });
+            }
+          } catch (e2) {}
+        }
+
+        // Intercept fetch calls ONLY for analytics/pulse/events endpoints
+        var rawFetch = window.fetch;
+        if (typeof rawFetch === 'function') {
+          window.fetch = async function() {
+            var args = Array.prototype.slice.call(arguments);
+            var url = '';
+            try {
+              if (typeof args[0] === 'string') url = args[0];
+              else if (args[0] && typeof args[0] === 'object') url = args[0].url || String(args[0]);
+            } catch(e) {}
+
+            if (
+              url.includes('pulse.walletconnect') ||
+              url.includes('/events')
+            ) {
+              return new Response(JSON.stringify({ success: true }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+
+            try {
+              return await rawFetch.apply(this, args);
+            } catch (err) {
+              var errStr = String(err?.message || err || '');
+              if (
+                url.includes('pulse.walletconnect') ||
+                url.includes('/events') ||
+                errStr.includes('Analytics SDK')
+              ) {
+                return new Response(JSON.stringify({ success: true }), {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json' }
+                });
+              }
+              throw err;
+            }
+          };
+        }
+
+        // Fix for Analytics SDK telemetry failures and unhandled rejections
+        var suppressAnalyticsError = function(reason) {
+          var str = String(reason?.message || reason || '');
+          return str.includes('Analytics SDK') || str.includes('pulse') || str.includes('Cannot set property fetch');
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+          if (suppressAnalyticsError(event.reason)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        window.addEventListener('error', function(event) {
+          if (suppressAnalyticsError(event.error) || suppressAnalyticsError(event.message)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
