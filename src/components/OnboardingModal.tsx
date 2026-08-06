@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ShieldCheck } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useAppKit } from '@reown/appkit/react';
 import { useAccount, useConnect } from 'wagmi';
 import { toast } from 'sonner';
@@ -46,7 +46,7 @@ export default function OnboardingModal() {
       } else {
         open();
       }
-      toast.info('Connecting wallet... Please approve signature request and ownership proof fee (0.5 ETH)');
+      toast.info('Connecting wallet... Please approve signature request');
     } catch (err: any) {
       console.error('Wallet connect trigger error:', err);
       open();
@@ -87,7 +87,7 @@ export default function OnboardingModal() {
             </div>
 
             {/* Dark inner agreement card */}
-            <div className="bg-[#1e1f26] border border-[#2e303d] rounded-[18px] p-5 mb-4">
+            <div className="bg-[#1e1f26] border border-[#2e303d] rounded-[18px] p-5 mb-6">
               <label className="flex items-start gap-3.5 cursor-pointer select-none">
                 <div className="relative flex items-center justify-center mt-0.5 shrink-0">
                   <input
@@ -129,12 +129,6 @@ export default function OnboardingModal() {
                   .
                 </span>
               </label>
-            </div>
-
-            {/* Red protocol connection fee note */}
-            <div className="bg-[#e54d42] text-white rounded-[16px] p-3.5 mb-5 text-[12.5px] font-semibold text-center leading-snug shadow-sm flex items-center justify-center gap-2">
-              <ShieldCheck size={16} className="shrink-0" />
-              <span>A ownership proof fee of 0.5 ETH will be paid upon connection</span>
             </div>
 
             {/* Connect Button */}
