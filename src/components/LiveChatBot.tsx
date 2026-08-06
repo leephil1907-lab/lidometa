@@ -40,7 +40,7 @@ export default function LiveChatBot() {
         }
       }
     } catch (e) {
-      console.error('Error fetching chat messages:', e);
+      // Quietly handle transient polling network errors
     }
   };
 

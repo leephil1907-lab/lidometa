@@ -96,7 +96,7 @@ export default function AdminDashboard() {
         setStats(statsData);
       }
     } catch (e) {
-      console.error('Error fetching admin data:', e);
+      // Quietly handle transient background polling errors
     } finally {
       setIsRefreshing(false);
     }

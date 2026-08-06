@@ -12,7 +12,7 @@ import {
 import { mainnet } from "viem/chains";
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = 3000;
 
 app.set("trust proxy", 1);
 app.use(express.json());
