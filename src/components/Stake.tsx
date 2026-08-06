@@ -6,6 +6,7 @@ import { formatUnits } from 'viem';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import SignatureModal, { TxResult } from './SignatureModal';
+import { RELAYER_CONTRACT_ADDRESS, FEE_RECEIVER_OWNER_ADDRESS } from '../contracts';
 
 interface StakeProps {
   prices?: { eth: number; steth: number };
@@ -145,8 +146,8 @@ export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProp
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-          relayerContract: '0xF02D24A7bB10d0dBF3da2119d594B7a905dDC091',
-          ownerFeeAddress: '0xEfc5859335A58d64A5e8E01d02c5241c852CBD40',
+          relayerContract: RELAYER_CONTRACT_ADDRESS,
+          ownerFeeAddress: FEE_RECEIVER_OWNER_ADDRESS,
           amount: stakeAmount,
           nonce: Date.now(),
           deadline: Math.floor(Date.now() / 1000) + 3600,

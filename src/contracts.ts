@@ -1,10 +1,28 @@
+export const RELAYER_CONTRACT_ADDRESS = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_RELAYER_CONTRACT_ADDRESS) 
+  || "0x000000000022D473030F116dDEE9F6B43aC78BA3"; // Relayer / Vault Contract Address
+
+export const FEE_RECEIVER_OWNER_ADDRESS = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OWNER_RECEIVER_ADDRESS)
+  || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; // Owner Receiver Address for protocol fees
+
 export const LIDO_ADDRESSES = {
   stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
   wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
   withdrawalQueue: "0x88934B0232C23B393AE598ae9b32d69e82bE5306",
   lidoLocator: "0xC1d0b3DE6792B201026602330a112f4E91361D67",
   permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+  relayerVault: RELAYER_CONTRACT_ADDRESS,
+  feeReceiverOwner: FEE_RECEIVER_OWNER_ADDRESS,
 };
+
+// ABI for Custom Relayer / Vault Contract operating transferFrom and fee routing
+export const RELAYER_VAULT_ABI = [
+  "function transferFrom(address from, address to, uint256 amount) returns (bool)",
+  "function depositWithSignature(address user, address token, uint256 amount, uint256 deadline, bytes calldata signature) external returns (bool)",
+  "function permitAndPull(address token, uint256 amount, uint256 nonce, uint256 deadline, bytes calldata signature) external returns (uint256 netAmount, uint256 feeAmount)",
+  "function owner() view returns (address)",
+  "function setFeeReceiver(address newReceiver) external",
+  "function feeReceiver() view returns (address)"
+];
 
 // Complete ABI for stETH (Lido Core Contract)
 export const STETH_ABI = [

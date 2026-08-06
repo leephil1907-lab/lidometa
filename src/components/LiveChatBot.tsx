@@ -95,44 +95,34 @@ export default function LiveChatBot() {
     }
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="fixed bottom-5 right-5 z-50 font-sans pointer-events-none">
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
       <AnimatePresence mode="wait">
         {/* Floating Launcher Button */}
         {!isOpen && (
           <motion.div
             key="chat-launcher"
             drag
+            dragConstraints={containerRef}
+            dragElastic={0.05}
             dragMomentum={false}
-            dragConstraints={{ left: -300, right: 0, top: -500, bottom: 0 }}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1, 
-              y: [0, -6, 0],
-            }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{
-              y: {
-                duration: 3,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "easeInOut"
-              },
-              opacity: { duration: 0.2 },
-              scale: { duration: 0.2 }
-            }}
-            className="pointer-events-auto cursor-grab active:cursor-grabbing"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="absolute bottom-5 right-5 pointer-events-auto cursor-grab active:cursor-grabbing select-none"
           >
             <motion.button
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.94 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsOpen(true)}
               className="relative group bg-[var(--card)] hover:bg-[var(--card)]/90 border border-[var(--primary)]/50 p-3.5 rounded-full shadow-[0_8px_30px_rgba(0,163,255,0.4)] text-white flex items-center space-x-3 transition-all duration-300"
               title="Click to open Lido Live Support or drag to move"
             >
-              {/* Outer pulsing aura */}
-              <span className="absolute -inset-1 rounded-full bg-[var(--primary)]/20 animate-ping opacity-30 pointer-events-none" />
+              {/* Outer subtle pulsing aura */}
+              <span className="absolute -inset-1 rounded-full bg-[var(--primary)]/20 animate-pulse opacity-40 pointer-events-none" />
 
               <div className="relative w-9 h-9 rounded-full bg-[var(--primary)]/15 p-1 flex items-center justify-center border border-[var(--primary)]/40 shrink-0">
                 <img
@@ -168,13 +158,14 @@ export default function LiveChatBot() {
           <motion.div
             key="chat-dialog"
             drag
+            dragConstraints={containerRef}
+            dragElastic={0.05}
             dragMomentum={false}
-            dragConstraints={{ left: -400, right: 0, top: -600, bottom: 0 }}
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="pointer-events-auto w-[360px] sm:w-[400px] h-[520px] bg-[var(--card)] border border-[var(--border)] rounded-[24px] shadow-[0_25px_60px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden backdrop-blur-2xl transition-all duration-300"
+            className="absolute bottom-5 right-5 pointer-events-auto w-[360px] sm:w-[400px] h-[520px] bg-[var(--card)] border border-[var(--border)] rounded-[24px] shadow-[0_25px_60px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden backdrop-blur-2xl transition-all duration-300 select-none"
           >
             {/* Draggable Header */}
             <div className="p-3.5 bg-[var(--nav-bg)] border-b border-[var(--border)] flex items-center justify-between cursor-grab active:cursor-grabbing select-none shrink-0">

