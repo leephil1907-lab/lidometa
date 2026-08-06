@@ -124,16 +124,6 @@ export default function TopNav({ activeTab, setActiveTab }: TopNavProps) {
 
         {isConnected && address ? (
           <div className="flex items-center space-x-1 sm:space-x-2">
-            {isVerified && (
-              <div 
-                className="flex items-center space-x-1 px-2.5 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full text-[12px] font-bold shadow-xs animate-in fade-in"
-                title="Wallet Signature Request Approved & Verified"
-              >
-                <ShieldCheck size={14} className="text-emerald-400" />
-                <span>Verified</span>
-              </div>
-            )}
-
             <button 
               onClick={handleOpenWallet}
               className="px-3.5 py-2 bg-[var(--primary)] hover:opacity-90 text-white text-[14px] font-bold rounded-full transition-all flex items-center space-x-2 shadow-sm cursor-pointer"
