@@ -27,7 +27,9 @@ export default function Withdrawals() {
     { question: "Are there any fees for requesting or claiming withdrawals?", answer: "Lido protocol imposes no protocol withdrawal fees (0%). Users only pay standard Ethereum network gas fees to broadcast request and claim transactions." },
   ];
 
-  const handleSubmit = async () => { window.location.assign("https://stake.lido.fi/"); };
+  const handleSubmit = async () => {
+    toast.error('Transaction execution is not connected to a verified on-chain flow yet. No signature was requested and no transaction was submitted.');
+  };
 
   return (
     <div className="w-full">
