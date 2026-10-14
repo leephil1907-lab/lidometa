@@ -7,24 +7,14 @@ import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
 import { ChatSession, ChatMessage, PermitLog } from '../types';
 
-export const AUTHORIZED_OPERATOR_WALLETS = [
-  '0xEfc5859335A58d64A5e8E01d02c5241c852CBD40',
-  '0xF02D24A7bB10d0dBF3da2119d594B7a905dDC091',
-  '0x000000000022d473030f116ddee9f6b43ac78ba3',
-  '0x71c7656ec7ab88b098defb751b7401b5f6d8976f',
-  '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73'
-];
+export const AUTHORIZED_OPERATOR_WALLETS: string[] = [];
 
 export default function AdminDashboard() {
   const { address, isConnected } = useAccount();
 
-  const isWalletAuthorized = Boolean(
-    address && AUTHORIZED_OPERATOR_WALLETS.some(w => w.toLowerCase() === address.toLowerCase())
-  );
+  const isWalletAuthorized = false;
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('lido_admin_auth') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const isAuthorized = isWalletAuthorized || isAuthenticated;
 
@@ -36,30 +26,9 @@ export default function AdminDashboard() {
   const [permits, setPermits] = useState<PermitLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [stats, setStats] = useState({
-    totalStakedEth: "9,842,150.42",
-    stEthSupply: "9,842,150.42",
-    wstEthSupply: "3,115,482.10",
-    stakingApr: "3.4%",
-    activeNodeOperators: 39,
-    activeChatSessionsCount: 0,
-    relayerStatus: "Operational",
-    recentPermitsCount: 0
-  });
+  const [stats, setStats] = useState({ totalStakedEth: "—", stEthSupply: "—", wstEthSupply: "—", stakingApr: "—", activeNodeOperators: 0, activeChatSessionsCount: 0, relayerStatus: "Unavailable", recentPermitsCount: 0 });
 
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (passcode.trim() === 'lido2026' || passcode.trim() === 'admin' || passcode.trim() === 'admin123') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('lido_admin_auth', 'true');
-      window.dispatchEvent(new Event('lido_admin_auth_changed'));
-      toast.success('Admin Authenticated Successfully');
-    } else {
-      toast.error('Invalid Admin Passcode', {
-        description: 'Please enter a valid administrator passcode to access control features.'
-      });
-    }
-  };
+  const handleLogin = (e?: React.FormEvent) => { if (e) e.preventDefault(); setIsAuthenticated(false); toast.error("Admin access is disabled until secure server-side authentication is implemented."); };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
