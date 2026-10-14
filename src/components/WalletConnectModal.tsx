@@ -149,12 +149,18 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
         throw new Error('SIWE signature verification failed on server');
       }
 
-      // Server-verified SIWE session is authoritative; browser storage is not an authorization source.
+      // SIWE proves wallet ownership; the server separately checks the configured admin wallet.
+      const adminCheck = await fetch('/api/admin/me', { credentials: 'same-origin' });
+      if (!adminCheck.ok) {
+        const result = await adminCheck.json().catch(() => ({}));
+        throw new Error(result.error || 'This wallet is not configured for administrator access.');
+      }
+      sessionStorage.setItem('lido_admin_auth', 'true');
       setSiweAuthenticated(true);
       window.dispatchEvent(new Event('lido_admin_auth_changed'));
 
-      toast.success('SIWE Verification Successful!', {
-        description: 'Session cryptographically verified and active.'
+      toast.success('Administrator wallet verified.', {
+        description: 'The server confirmed administrator access.'
       });
     } catch (err: any) {
       console.error('SIWE Error:', err);
