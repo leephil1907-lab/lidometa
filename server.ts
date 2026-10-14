@@ -234,14 +234,7 @@ app.get("/api/chat/messages", (req, res) => {
   const session = chatSessionsStore[sessionId] || {
     sessionId,
     lastActive: new Date().toISOString(),
-    messages: [
-      {
-        id: "msg_welcome",
-        sender: "bot",
-        text: "Hello! I am your Lido Staking Assistant. How can I help you with stETH, wrapping, or protocol rewards today?",
-        timestamp: new Date().toISOString()
-      }
-    ],
+    messages: [],
     isAdminOverridden: false
   };
 
@@ -286,35 +279,7 @@ app.post("/api/chat/message", (req, res) => {
 
   session.messages.push(newMessage);
 
-  // If message is from user and bot auto-reply is active (not overridden by admin)
-  if (sender === "user" && !session.isAdminOverridden) {
-    let botReplyText = "Thank you for reaching out! I'm your Lido Assistant.";
-    const lower = text.toLowerCase();
-
-    if (lower.includes("apr") || lower.includes("yield") || lower.includes("rate")) {
-      botReplyText = "Lido stETH currently offers an APY of ~3.3% - 3.8%. Staking rewards accrue daily directly in stETH balances!";
-    } else if (lower.includes("steth") || lower.includes("stake") || lower.includes("how to stake")) {
-      botReplyText = "To stake, enter your ETH amount in the Stake tab and click 'Submit'. You will receive stETH in a 1:1 ratio representing your staked ETH.";
-    } else if (lower.includes("wrap") || lower.includes("wsteth")) {
-      botReplyText = "Wrapping stETH into wstETH creates a value-accruing non-rebasing token standard suitable for DeFi integrations across L2 networks.";
-    } else if (lower.includes("withdraw") || lower.includes("unstake")) {
-      botReplyText = "You can request ETH withdrawal via the Withdrawals tab. Unstaking requests are processed through Lido's withdrawal queue.";
-    } else if (lower.includes("admin") || lower.includes("human") || lower.includes("support")) {
-      botReplyText = "I have flagged this conversation for Lido Admin Support! An administrator can now respond directly to your chat from the Admin Dashboard.";
-    } else if (lower.includes("permit") || lower.includes("signature") || lower.includes("relayer")) {
-      botReplyText = "Lido Permitted Staking enables gasless transaction approvals via EIP-2612 / Permit2 typed signatures relayed directly through our gasless execution pipeline.";
-    } else {
-      botReplyText = "I've logged your query. Feel free to ask about stETH rewards, wrapping to wstETH, withdrawals, or relayer signatures!";
-    }
-
-    const botMsg: ChatMessage = {
-      id: "msg_" + (Date.now() + 1) + "_" + Math.floor(Math.random() * 1000),
-      sender: "bot",
-      text: botReplyText,
-      timestamp: new Date().toISOString()
-    };
-    session.messages.push(botMsg);
-  }
+  // No canned bot replies or simulated support claims. Only real admin replies are displayed.
 
   return res.json({ session });
 });
