@@ -22,62 +22,14 @@ import { usePriceData } from './hooks/usePriceData';
 import OnboardingModal from './components/OnboardingModal';
 
 function WalletConnectionSigner() {
-  const { isConnected, address } = useAccount();
-  const { signMessageAsync } = useSignMessage();
-  const [isSigning, setIsSigning] = useState(false);
-
-  useEffect(() => {
-    if (!isConnected || !address || isSigning) return;
-
-    const sessionKey = `lido_connected_sig_${address.toLowerCase()}`;
-    const alreadySigned = typeof window !== 'undefined' ? sessionStorage.getItem(sessionKey) : 'true';
-
-    if (!alreadySigned) {
-      const requestSignature = async () => {
-        setIsSigning(true);
-        try {
-          const message = `Lido Staking Protocol - Wallet Verification\n\nPlease sign this message to verify wallet ownership and authorize your session.\n\nWallet Address: ${address}\nTimestamp: ${new Date().toISOString()}`;
-          toast.info('Please approve the signature request in your wallet...');
-          await signMessageAsync({ account: address as `0x${string}`, message });
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem(sessionKey, 'true');
-            sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
-            window.dispatchEvent(new Event('lido_verification_changed'));
-          }
-          toast.success('Wallet signature verified!');
-        } catch (err: any) {
-          console.warn('Wallet connection signature skipped or rejected:', err);
-          const rawMsg = String(err?.message || err || '').toLowerCase();
-          if (rawMsg.includes('reject') || rawMsg.includes('denied') || rawMsg.includes('user rejected')) {
-            toast.error('Signature request rejected in wallet.');
-          }
-        } finally {
-          setIsSigning(false);
-        }
-      };
-
-      const timer = setTimeout(() => {
-        requestSignature();
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isConnected, address]);
-
+  // Wallet connection must never trigger a signature automatically.
   return null;
 }
 
 export default function App() {
   const { address } = useAccount();
 
-  const isOperatorAuthorized = () => {
-    if (typeof window === 'undefined') return false;
-    const hasSession = sessionStorage.getItem('lido_admin_auth') === 'true';
-    const hasAuthorizedWallet = Boolean(
-      address && AUTHORIZED_OPERATOR_WALLETS.some((w) => w.toLowerCase() === address.toLowerCase())
-    );
-    return hasSession || hasAuthorizedWallet;
-  };
+  const isOperatorAuthorized = () => false;
 
   const [isAdminAuth, setIsAdminAuth] = useState(isOperatorAuthorized);
 
