@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 export function usePriceData() {
   const [prices, setPrices] = useState({ eth: 0, steth: 0 });
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     let active = true;
     const fetchPrices = async () => {
@@ -15,11 +16,14 @@ export function usePriceData() {
         if (active && Number.isFinite(eth) && Number.isFinite(steth)) setPrices({ eth, steth });
       } catch {
         if (active) setPrices({ eth: 0, steth: 0 });
-      } finally { if (active) setLoading(false); }
+      } finally {
+        if (active) setLoading(false);
+      }
     };
     fetchPrices();
     const interval = setInterval(fetchPrices, 60000);
     return () => { active = false; clearInterval(interval); };
   }, []);
+
   return { prices, loading };
 }
