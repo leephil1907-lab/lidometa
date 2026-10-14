@@ -14,7 +14,7 @@ export default function AdminDashboard() {
 
   const isWalletAuthorized = false;
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('lido_admin_auth') === 'true');
 
   const isAuthorized = isWalletAuthorized || isAuthenticated;
 
@@ -28,9 +28,10 @@ export default function AdminDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stats, setStats] = useState({ totalStakedEth: "—", stEthSupply: "—", wstEthSupply: "—", stakingApr: "—", activeNodeOperators: 0, activeChatSessionsCount: 0, relayerStatus: "Unavailable", recentPermitsCount: 0 });
 
-  const handleLogin = (e?: React.FormEvent) => { if (e) e.preventDefault(); setIsAuthenticated(false); toast.error("Admin access is disabled until secure server-side authentication is implemented."); };
+  const handleLogin = (e?: React.FormEvent) => { if (e) e.preventDefault(); toast.error("Connect the configured administrator wallet and complete SIWE verification to access the console."); };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await fetch('/api/logout', { method: 'POST' }); } catch {}
     setIsAuthenticated(false);
     sessionStorage.removeItem('lido_admin_auth');
     window.dispatchEvent(new Event('lido_admin_auth_changed'));
