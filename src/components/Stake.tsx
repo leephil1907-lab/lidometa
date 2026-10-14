@@ -12,7 +12,7 @@ interface StakeProps {
   prices?: { eth: number; steth: number };
 }
 
-export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProps) {
+export default function Stake({ prices = { eth: 0, steth: 0 } }: StakeProps) {
   const { open } = useAppKit();
   const { isConnected, address } = useAccount();
 
@@ -251,7 +251,7 @@ export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProp
               {isEstimatingGas && !gasCostUSD ? (
                 <Loader2 size={12} className="animate-spin text-[var(--primary)]" />
               ) : null}
-              {gasCostUSD ? `$${gasCostUSD}` : '~$0.05'}
+              {gasCostUSD !== null ? `${gasCostUSD}` : 'Unavailable'}
             </span>
           </div>
           <div className="flex justify-between items-center text-[13px]">
