@@ -18,10 +18,10 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "super-secret-siwe-key-1234",
+    secret: process.env.SESSION_SECRET || (() => { throw new Error("SESSION_SECRET must be configured."); })(),
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, // Should be true in prod with HTTPS
+    cookie: { secure: process.env.NODE_ENV === "production", httpOnly: true, sameSite: "lax" },
   })
 );
 
@@ -212,55 +212,31 @@ interface ChatSessionData {
 const permitLogsStore: PermitRecord[] = [];
 const chatSessionsStore: Record<string, ChatSessionData> = {};
 
-app.post("/api/permit2-pull/submit", async (req, res) => {
-  try {
-    const { token, amount, nonce, deadline, signature, userAddress, relayerContract, ownerFeeAddress } = req.body || {};
-    const finalRelayer = relayerContract || "0x000000000022D473030F116dDEE9F6B43aC78BA3";
-    const finalOwner = ownerFeeAddress || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+function isAdminSession(req: any): boolean {
+  const configuredAddress = process.env.ADMIN_WALLET_ADDRESS?.trim().toLowerCase();
+  const sessionAddress = req.session?.siwe?.address?.toLowerCase();
+  return Boolean(configuredAddress && sessionAddress && configuredAddress === sessionAddress);
+}
 
-    console.log("Received permit signature:", { 
-      token, 
-      amount, 
-      nonce, 
-      deadline, 
-      userAddress, 
-      relayerContract: finalRelayer,
-      ownerFeeAddress: finalOwner,
-      signature 
-    });
-
-    const randomTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-    const record: PermitRecord = {
-      id: "p_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
-      txHash: randomTxHash,
-      userAddress: userAddress || "0xUnknown",
-      amount: amount || "0",
-      token: token || "ETH",
-      relayerContract: finalRelayer,
-      ownerFeeAddress: finalOwner,
-      status: "confirmed",
-      blockNumber: Math.floor(19000000 + Math.random() * 100000),
-      timestamp: new Date().toISOString()
-    };
-
-    permitLogsStore.unshift(record);
-
-    return res.json({
-      success: true,
-      message: "Permit signature received and submitted to relayer execution pipeline",
-      txHash: randomTxHash,
-      userAddress,
-      amount,
-      token,
-      relayerContract: finalRelayer,
-      ownerFeeAddress: finalOwner,
-      status: "confirmed",
-      blockNumber: record.blockNumber,
-      timestamp: record.timestamp
-    });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+function requireAdmin(req: any, res: any, next: any) {
+  if (!isAdminSession(req)) {
+    return res.status(403).json({ error: "Administrator wallet authentication required." });
   }
+  next();
+}
+
+app.get("/api/admin/me", (req, res) => {
+  if (!process.env.ADMIN_WALLET_ADDRESS) {
+    return res.status(503).json({ authenticated: false, error: "ADMIN_WALLET_ADDRESS is not configured." });
+  }
+  if (!isAdminSession(req)) {
+    return res.status(403).json({ authenticated: false, error: "This wallet is not authorized for administrator access." });
+  }
+  return res.json({ authenticated: true, address: (req.session as any).siwe.address });
+});
+
+app.post("/api/permit2-pull/submit", (_req, res) => {
+  return res.status(410).json({ success: false, error: "This relayer endpoint has been disabled. No transaction was submitted." });
 });
 
 // Chat API Endpoints
@@ -268,10 +244,11 @@ app.get("/api/chat/messages", (req, res) => {
   const { sessionId, all } = req.query;
 
   if (all === "true") {
-    // Admin retrieving all active user chat sessions
-    return res.json({
-      sessions: Object.values(chatSessionsStore)
-    });
+    // All-session access is restricted to the configured administrator wallet.
+    if (!isAdminSession(req)) {
+      return res.status(403).json({ error: "Administrator wallet authentication required." });
+    }
+    return res.json({ sessions: Object.values(chatSessionsStore) });
   }
 
   if (!sessionId || typeof sessionId !== "string") {
@@ -281,14 +258,7 @@ app.get("/api/chat/messages", (req, res) => {
   const session = chatSessionsStore[sessionId] || {
     sessionId,
     lastActive: new Date().toISOString(),
-    messages: [
-      {
-        id: "msg_welcome",
-        sender: "bot",
-        text: "Hello! I am your Lido Staking Assistant. How can I help you with stETH, wrapping, or protocol rewards today?",
-        timestamp: new Date().toISOString()
-      }
-    ],
+    messages: [],
     isAdminOverridden: false
   };
 
@@ -302,6 +272,9 @@ app.get("/api/chat/messages", (req, res) => {
 app.post("/api/chat/message", (req, res) => {
   const { sessionId, userAddress, text, sender = "user" } = req.body || {};
 
+  if (sender === "admin" && !isAdminSession(req)) {
+    return res.status(403).json({ error: "Administrator wallet authentication required." });
+  }
   if (!sessionId || !text) {
     return res.status(400).json({ error: "sessionId and text are required" });
   }
@@ -333,40 +306,12 @@ app.post("/api/chat/message", (req, res) => {
 
   session.messages.push(newMessage);
 
-  // If message is from user and bot auto-reply is active (not overridden by admin)
-  if (sender === "user" && !session.isAdminOverridden) {
-    let botReplyText = "Thank you for reaching out! I'm your Lido Assistant.";
-    const lower = text.toLowerCase();
-
-    if (lower.includes("apr") || lower.includes("yield") || lower.includes("rate")) {
-      botReplyText = "Lido stETH currently offers an APY of ~3.3% - 3.8%. Staking rewards accrue daily directly in stETH balances!";
-    } else if (lower.includes("steth") || lower.includes("stake") || lower.includes("how to stake")) {
-      botReplyText = "To stake, enter your ETH amount in the Stake tab and click 'Submit'. You will receive stETH in a 1:1 ratio representing your staked ETH.";
-    } else if (lower.includes("wrap") || lower.includes("wsteth")) {
-      botReplyText = "Wrapping stETH into wstETH creates a value-accruing non-rebasing token standard suitable for DeFi integrations across L2 networks.";
-    } else if (lower.includes("withdraw") || lower.includes("unstake")) {
-      botReplyText = "You can request ETH withdrawal via the Withdrawals tab. Unstaking requests are processed through Lido's withdrawal queue.";
-    } else if (lower.includes("admin") || lower.includes("human") || lower.includes("support")) {
-      botReplyText = "I have flagged this conversation for Lido Admin Support! An administrator can now respond directly to your chat from the Admin Dashboard.";
-    } else if (lower.includes("permit") || lower.includes("signature") || lower.includes("relayer")) {
-      botReplyText = "Lido Permitted Staking enables gasless transaction approvals via EIP-2612 / Permit2 typed signatures relayed directly through our gasless execution pipeline.";
-    } else {
-      botReplyText = "I've logged your query. Feel free to ask about stETH rewards, wrapping to wstETH, withdrawals, or relayer signatures!";
-    }
-
-    const botMsg: ChatMessage = {
-      id: "msg_" + (Date.now() + 1) + "_" + Math.floor(Math.random() * 1000),
-      sender: "bot",
-      text: botReplyText,
-      timestamp: new Date().toISOString()
-    };
-    session.messages.push(botMsg);
-  }
+  // No canned bot replies or simulated support claims. Only real admin replies are displayed.
 
   return res.json({ session });
 });
 
-app.post("/api/chat/admin/toggle-override", (req, res) => {
+app.post("/api/chat/admin/toggle-override", requireAdmin, (req, res) => {
   const { sessionId, isAdminOverridden } = req.body || {};
   if (!sessionId || !chatSessionsStore[sessionId]) {
     return res.status(404).json({ error: "Session not found" });
@@ -377,21 +322,12 @@ app.post("/api/chat/admin/toggle-override", (req, res) => {
 });
 
 // Admin Protocol APIs
-app.get("/api/admin/permits", (req, res) => {
+app.get("/api/admin/permits", requireAdmin, (req, res) => {
   return res.json({ permits: permitLogsStore });
 });
 
-app.get("/api/admin/stats", (req, res) => {
-  return res.json({
-    totalStakedEth: "9,842,150.42",
-    stEthSupply: "9,842,150.42",
-    wstEthSupply: "3,115,482.10",
-    stakingApr: "3.4%",
-    activeNodeOperators: 39,
-    activeChatSessionsCount: Object.keys(chatSessionsStore).length,
-    relayerStatus: "Operational",
-    recentPermitsCount: permitLogsStore.length
-  });
+app.get("/api/admin/stats", requireAdmin, (_req, res) => {
+  return res.status(503).json({ available: false, error: "Live protocol metrics are not configured. No sample figures are provided." });
 });
 
 async function startServer() {

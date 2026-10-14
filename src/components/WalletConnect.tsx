@@ -75,8 +75,8 @@ export default function WalletConnect() {
       setSignature(signedMessage);
       setVerified(true);
 
-      sessionStorage.setItem('lido_admin_auth', 'true');
-      sessionStorage.setItem('lido_demo_wallet', walletAddress);
+      // Authentication state is verified by the server session; do not treat browser storage as authorization.
+    
       window.dispatchEvent(new Event('lido_admin_auth_changed'));
       window.dispatchEvent(new CustomEvent('lido_wallet_connected', { detail: { address: walletAddress } }));
     } catch (err: any) {

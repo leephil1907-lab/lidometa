@@ -21,8 +21,8 @@ if (!envProjectId) {
 
 
 const metadata = {
-  name: 'Lido Stake UI',
-  description: 'Lido Stake Interface with Reown AppKit',
+  name: 'Stake Portal',
+  description: 'Independent interface embedding the official Lido staking application.',
   url: typeof window !== 'undefined' ? window.location.origin : '',
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 };

@@ -7,24 +7,14 @@ import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
 import { ChatSession, ChatMessage, PermitLog } from '../types';
 
-export const AUTHORIZED_OPERATOR_WALLETS = [
-  '0xEfc5859335A58d64A5e8E01d02c5241c852CBD40',
-  '0xF02D24A7bB10d0dBF3da2119d594B7a905dDC091',
-  '0x000000000022d473030f116ddee9f6b43ac78ba3',
-  '0x71c7656ec7ab88b098defb751b7401b5f6d8976f',
-  '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73'
-];
+export const AUTHORIZED_OPERATOR_WALLETS: string[] = [];
 
 export default function AdminDashboard() {
   const { address, isConnected } = useAccount();
 
-  const isWalletAuthorized = Boolean(
-    address && AUTHORIZED_OPERATOR_WALLETS.some(w => w.toLowerCase() === address.toLowerCase())
-  );
+  const isWalletAuthorized = false;
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('lido_admin_auth') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('lido_admin_auth') === 'true');
 
   const isAuthorized = isWalletAuthorized || isAuthenticated;
 
@@ -36,32 +26,12 @@ export default function AdminDashboard() {
   const [permits, setPermits] = useState<PermitLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [stats, setStats] = useState({
-    totalStakedEth: "9,842,150.42",
-    stEthSupply: "9,842,150.42",
-    wstEthSupply: "3,115,482.10",
-    stakingApr: "3.4%",
-    activeNodeOperators: 39,
-    activeChatSessionsCount: 0,
-    relayerStatus: "Operational",
-    recentPermitsCount: 0
-  });
+  const [stats, setStats] = useState({ totalStakedEth: "—", stEthSupply: "—", wstEthSupply: "—", stakingApr: "—", activeNodeOperators: 0, activeChatSessionsCount: 0, relayerStatus: "Unavailable", recentPermitsCount: 0 });
 
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (passcode.trim() === 'lido2026' || passcode.trim() === 'admin' || passcode.trim() === 'admin123') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('lido_admin_auth', 'true');
-      window.dispatchEvent(new Event('lido_admin_auth_changed'));
-      toast.success('Admin Authenticated Successfully');
-    } else {
-      toast.error('Invalid Admin Passcode', {
-        description: 'Please enter a valid administrator passcode to access control features.'
-      });
-    }
-  };
+  const handleLogin = (e?: React.FormEvent) => { if (e) e.preventDefault(); toast.error("Connect the configured administrator wallet and complete SIWE verification to access the console."); };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await fetch('/api/logout', { method: 'POST' }); } catch {}
     setIsAuthenticated(false);
     sessionStorage.removeItem('lido_admin_auth');
     window.dispatchEvent(new Event('lido_admin_auth_changed'));
@@ -192,7 +162,7 @@ export default function AdminDashboard() {
               type="password"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
-              placeholder="Enter admin passcode (e.g. lido2026)..."
+              placeholder="Secure server-side admin authentication is not configured"
               className="w-full bg-[var(--nav-bg)] border border-[var(--border)] rounded-full px-5 py-3 text-[14px] text-[var(--foreground)] outline-none focus:border-amber-500 transition-all"
               autoFocus
             />
@@ -484,24 +454,7 @@ export default function AdminDashboard() {
                   })}
                 </div>
 
-                {/* Quick Admin Action Chips */}
-                <div className="pt-2 px-1 flex items-center space-x-2 overflow-x-auto scrollbar-none">
-                  {[
-                    "Hello! Lido Support Engineer here. How can I assist?",
-                    "Your permit signature was successfully verified and relayed.",
-                    "Staking rewards compound daily. Yield is currently ~3.4% APY.",
-                    "Unstaking requests can be tracked directly in the Withdrawals tab."
-                  ].map((preset, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setAdminReplyText(preset)}
-                      className="shrink-0 text-[11px] font-medium bg-[var(--nav-bg)] hover:bg-amber-500/20 hover:text-amber-300 border border-[var(--border)] text-[var(--muted)] px-2.5 py-1 rounded-full transition-all cursor-pointer truncate max-w-[200px]"
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
-
+                {/* Replies are written manually; no canned or pre-approved messages. */}
                 {/* Reply Input Box */}
                 <div className="pt-3 border-t border-[var(--border)] flex items-center space-x-2">
                   <input

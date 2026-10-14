@@ -28,42 +28,7 @@ export default function Withdrawals() {
   ];
 
   const handleSubmit = async () => {
-    if (!isConnected) {
-      try { open(); } catch (e) { console.warn(e); }
-      return;
-    }
-
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      toast.error('Please enter a valid stETH amount');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setShowSigModal(true);
-
-    try {
-      const actionTitle = mode === 'request' ? `Request Withdrawal (${method.toUpperCase()})` : 'Claim ETH Withdrawal';
-      const message = `Lido Withdrawal Request\nAction: ${actionTitle}\nAmount: ${amount} stETH\nTimestamp: ${new Date().toISOString()}`;
-      
-      await signMessageAsync({ account: address as `0x${string}`, message });
-      if (typeof window !== 'undefined' && address) {
-        sessionStorage.setItem(`lido_connected_sig_${address.toLowerCase()}`, 'true');
-        sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
-        window.dispatchEvent(new Event('lido_verification_changed'));
-      }
-      toast.success(`Signature approved! ${actionTitle} request for ${amount} stETH submitted.`);
-      setAmount('');
-    } catch (error: any) {
-      const msg = error?.message || 'User rejected signature request.';
-      if (msg.toLowerCase().includes('reject') || msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('cancel')) {
-        toast.error('Signature request rejected in wallet.');
-      } else {
-        toast.error('Wallet signature failed. Please try again.');
-      }
-    } finally {
-      setIsSubmitting(false);
-      setShowSigModal(false);
-    }
+    toast.error('Transaction execution is not connected to a verified on-chain flow yet. No signature was requested and no transaction was submitted.');
   };
 
   return (

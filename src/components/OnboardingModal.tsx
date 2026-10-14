@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 export default function OnboardingModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isChecked, setIsChecked] = useState(true);
+  const [isChecked, setIsChecked] = useState(false);
   const { open } = useAppKit();
   const { isConnected } = useAccount();
   const { connectors, connect } = useConnect();
@@ -46,7 +46,7 @@ export default function OnboardingModal() {
       } else {
         open();
       }
-      toast.info('Connecting wallet... Please approve signature request');
+      toast.info('Connecting wallet. No signature is requested automatically.');
     } catch (err: any) {
       console.error('Wallet connect trigger error:', err);
       open();

