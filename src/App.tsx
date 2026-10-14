@@ -70,7 +70,7 @@ function WalletConnectionSigner() {
 export default function App() {
   const { address } = useAccount();
 
-  const isOperatorAuthorized = () => false;
+  const isOperatorAuthorized = () => typeof window !== 'undefined' && sessionStorage.getItem('lido_admin_auth') === 'true';
 
   const [isAdminAuth, setIsAdminAuth] = useState(isOperatorAuthorized);
 
