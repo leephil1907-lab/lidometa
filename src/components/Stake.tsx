@@ -103,7 +103,9 @@ export default function Stake({ prices = { eth: 0, steth: 0 } }: StakeProps) {
     return () => clearInterval(interval);
   }, [prices.eth]);
 
-  const handleSubmit = async () => { window.location.assign("https://stake.lido.fi/"); };
+  const handleSubmit = async () => {
+    toast.error('Transaction execution is not connected to a verified on-chain flow yet. No signature was requested and no transaction was submitted.');
+  };
 
   const marketCap = (9180000 * prices.steth).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
