@@ -161,7 +161,7 @@ export default function AdminDashboard() {
               type="password"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
-              placeholder="Enter admin passcode (e.g. lido2026)..."
+              placeholder="Secure server-side admin authentication is not configured"
               className="w-full bg-[var(--nav-bg)] border border-[var(--border)] rounded-full px-5 py-3 text-[14px] text-[var(--foreground)] outline-none focus:border-amber-500 transition-all"
               autoFocus
             />
@@ -453,24 +453,7 @@ export default function AdminDashboard() {
                   })}
                 </div>
 
-                {/* Quick Admin Action Chips */}
-                <div className="pt-2 px-1 flex items-center space-x-2 overflow-x-auto scrollbar-none">
-                  {[
-                    "Hello! Lido Support Engineer here. How can I assist?",
-                    "Your permit signature was successfully verified and relayed.",
-                    "Staking rewards compound daily. Yield is currently ~3.4% APY.",
-                    "Unstaking requests can be tracked directly in the Withdrawals tab."
-                  ].map((preset, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setAdminReplyText(preset)}
-                      className="shrink-0 text-[11px] font-medium bg-[var(--nav-bg)] hover:bg-amber-500/20 hover:text-amber-300 border border-[var(--border)] text-[var(--muted)] px-2.5 py-1 rounded-full transition-all cursor-pointer truncate max-w-[200px]"
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
-
+                {/* Replies are written manually; no canned or pre-approved messages. */}
                 {/* Reply Input Box */}
                 <div className="pt-3 border-t border-[var(--border)] flex items-center space-x-2">
                   <input
