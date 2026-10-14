@@ -1,4 +1,4 @@
-export type TabType = 'stake' | 'wrap' | 'withdrawals' | 'rewards' | 'earn' | 'admin';
+export type TabType = 'registry' | 'stake' | 'wrap' | 'withdrawals' | 'rewards' | 'earn' | 'admin';
 
 export interface ChatMessage {
   id: string;
