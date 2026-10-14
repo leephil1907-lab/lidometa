@@ -67,7 +67,7 @@ export default function SignatureModal({
             {/* Verified DApp & Protocol Security Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-full text-[12px] font-bold mb-4 shadow-xs">
               <ShieldCheck size={14} className="text-emerald-400" />
-              <span>Verified DApp • Lido Stake</span>
+              <span>Wallet action status</span>
             </div>
 
             {step === 'success' ? (
@@ -90,13 +90,13 @@ export default function SignatureModal({
             <h3 className="text-[20px] font-bold text-[var(--foreground)] mb-1">
               {step === 'signing' && (title || "Approve Signature in Wallet")}
               {step === 'relaying' && "Signature Approved ✓"}
-              {step === 'success' && "Staking Request Executed!"}
+              {step === 'success' && "Check transaction status"}
             </h3>
             
             <p className="text-[14px] text-[var(--muted)] mb-4 max-w-[340px]">
               {step === 'signing' && "A signature request has been dispatched to your connected wallet. Please review and approve on your wallet app."}
-              {step === 'relaying' && "Signature verified & approved! Submitting Permit2 transfer to Lido Stake relayer contract..."}
-              {step === 'success' && "Your approved signature was executed successfully and stETH tokens have been credited to your address."}
+              {step === 'relaying' && "No transaction is confirmed by this interface. Check the official protocol and your wallet before proceeding."}
+              {step === 'success' && "This interface cannot confirm a staking transaction. Verify any transaction on-chain before relying on its status."}
             </p>
 
             {/* Request Summary Box */}
@@ -122,7 +122,7 @@ export default function SignatureModal({
               <div className="flex justify-between items-center text-[13px]">
                 <span className="text-[var(--muted)]">Website Status</span>
                 <span className="font-semibold text-emerald-400 flex items-center gap-1">
-                  <ShieldCheck size={13} /> Verified Website
+                  <ShieldCheck size={13} /> Website verification unavailable
                 </span>
               </div>
               
