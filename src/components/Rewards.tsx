@@ -20,46 +20,6 @@ interface RewardsProps {
 
 type Period = '7D' | '30D' | '90D' | '1Y';
 
-const generateChartData = (days: number, userBalance: number = 0) => {
-  const data = [];
-  const now = new Date();
-  
-  // If user balance is 0 or negative, return empty/zero dataset
-  if (userBalance <= 0) {
-    for (let i = days; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      data.push({
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        balance: 0,
-        reward: 0,
-        totalRewarded: 0
-      });
-    }
-    return data;
-  }
-
-  // Calculate proportional historic growth based on active user balance
-  let runningBalance = userBalance * 0.98;
-  const initialBalance = runningBalance;
-
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    
-    const dailyReward = (userBalance * 0.038) / 365;
-    runningBalance += dailyReward;
-    
-    data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      balance: parseFloat(runningBalance.toFixed(4)),
-      reward: parseFloat(dailyReward.toFixed(5)),
-      totalRewarded: parseFloat((runningBalance - initialBalance).toFixed(4))
-    });
-  }
-  return data;
-};
-
 export default function Rewards({ prices = { eth: 3000, steth: 3000 } }: RewardsProps) {
   const { open } = useAppKit();
   const { isConnected, address: wagmiAddress } = useAccount();
@@ -70,24 +30,14 @@ export default function Rewards({ prices = { eth: 3000, steth: 3000 } }: Rewards
 
   const address = wagmiAddress || addressInput;
 
-  useEffect(() => {
-    const periodDays = {
-      '7D': 7,
-      '30D': 30,
-      '90D': 90,
-      '1Y': 365
-    };
-    // If connected or tracking address, generate based on active balance (or 0 if zero balance)
-    const trackedBalance = isConnected ? 0 : (addressInput.trim().length > 30 ? 0 : 0);
-    setChartData(generateChartData(periodDays[selectedPeriod], trackedBalance));
-  }, [selectedPeriod, isConnected, addressInput]);
+  useEffect(() => { setChartData([]); }, [selectedPeriod, isConnected, addressInput]);
 
-  const stethPrice = prices.steth.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  const stethPrice = "Unavailable";
   const isTracking = isConnected || addressInput.trim().length > 30;
 
-  const currentBalance = chartData[chartData.length - 1]?.balance || 0;
-  const totalRewarded = chartData[chartData.length - 1]?.totalRewarded || 0;
-  const rewardedUsd = (totalRewarded * prices.steth).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  const currentBalance = chartData[chartData.length - 1]?.balance;
+  const totalRewarded = chartData[chartData.length - 1]?.totalRewarded;
+  const rewardedUsd = totalRewarded === undefined ? "Unavailable" : (totalRewarded * prices.steth).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
   return (
     <motion.div 
