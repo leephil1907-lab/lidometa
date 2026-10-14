@@ -212,6 +212,29 @@ interface ChatSessionData {
 const permitLogsStore: PermitRecord[] = [];
 const chatSessionsStore: Record<string, ChatSessionData> = {};
 
+function isAdminSession(req: any): boolean {
+  const configuredAddress = process.env.ADMIN_WALLET_ADDRESS?.trim().toLowerCase();
+  const sessionAddress = req.session?.siwe?.address?.toLowerCase();
+  return Boolean(configuredAddress && sessionAddress && configuredAddress === sessionAddress);
+}
+
+function requireAdmin(req: any, res: any, next: any) {
+  if (!isAdminSession(req)) {
+    return res.status(403).json({ error: "Administrator wallet authentication required." });
+  }
+  next();
+}
+
+app.get("/api/admin/me", (req, res) => {
+  if (!process.env.ADMIN_WALLET_ADDRESS) {
+    return res.status(503).json({ authenticated: false, error: "ADMIN_WALLET_ADDRESS is not configured." });
+  }
+  if (!isAdminSession(req)) {
+    return res.status(403).json({ authenticated: false, error: "This wallet is not authorized for administrator access." });
+  }
+  return res.json({ authenticated: true, address: (req.session as any).siwe.address });
+}
+
 app.post("/api/permit2-pull/submit", (_req, res) => {
   return res.status(410).json({ success: false, error: "This relayer endpoint has been disabled. No transaction was submitted." });
 });
@@ -221,10 +244,11 @@ app.get("/api/chat/messages", (req, res) => {
   const { sessionId, all } = req.query;
 
   if (all === "true") {
-    // Admin retrieving all active user chat sessions
-    return res.json({
-      sessions: Object.values(chatSessionsStore)
-    });
+    // All-session access is restricted to the configured administrator wallet.
+    if (!isAdminSession(req)) {
+      return res.status(403).json({ error: "Administrator wallet authentication required." });
+    }
+    return res.json({ sessions: Object.values(chatSessionsStore) });
   }
 
   if (!sessionId || typeof sessionId !== "string") {
@@ -248,6 +272,9 @@ app.get("/api/chat/messages", (req, res) => {
 app.post("/api/chat/message", (req, res) => {
   const { sessionId, userAddress, text, sender = "user" } = req.body || {};
 
+  if (sender === "admin" && !isAdminSession(req)) {
+    return res.status(403).json({ error: "Administrator wallet authentication required." });
+  }
   if (!sessionId || !text) {
     return res.status(400).json({ error: "sessionId and text are required" });
   }
@@ -284,7 +311,7 @@ app.post("/api/chat/message", (req, res) => {
   return res.json({ session });
 });
 
-app.post("/api/chat/admin/toggle-override", (req, res) => {
+app.post("/api/chat/admin/toggle-override", requireAdmin, (req, res) => {
   const { sessionId, isAdminOverridden } = req.body || {};
   if (!sessionId || !chatSessionsStore[sessionId]) {
     return res.status(404).json({ error: "Session not found" });
@@ -295,11 +322,11 @@ app.post("/api/chat/admin/toggle-override", (req, res) => {
 });
 
 // Admin Protocol APIs
-app.get("/api/admin/permits", (req, res) => {
+app.get("/api/admin/permits", requireAdmin, (req, res) => {
   return res.json({ permits: permitLogsStore });
 });
 
-app.get("/api/admin/stats", (_req, res) => {
+app.get("/api/admin/stats", requireAdmin, (_req, res) => {
   return res.status(503).json({ available: false, error: "Live protocol metrics are not configured. No sample figures are provided." });
 });
 
