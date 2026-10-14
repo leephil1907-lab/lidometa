@@ -27,7 +27,9 @@ export default function Wrap() {
     { question: "How can I unwrap wstETH back to stETH?", answer: "Switch to the 'Unwrap' tab above, enter your wstETH amount, and submit the signature request in your wallet." },
   ];
 
-  const handleSubmit = async () => { window.location.assign("https://stake.lido.fi/"); };
+  const handleSubmit = async () => {
+    toast.error('Transaction execution is not connected to a verified on-chain flow yet. No signature was requested and no transaction was submitted.');
+  };
 
   return (
     <div className="w-full">
