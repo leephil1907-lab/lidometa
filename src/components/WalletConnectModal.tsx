@@ -12,11 +12,7 @@ interface WalletConnectModalProps {
   onClose: () => void;
 }
 
-const PROTOCOL_ACCOUNTS = [
-  { name: 'Protocol Fee Owner & Admin', address: '0xEfc5859335A58d64A5e8E01d02c5241c852CBD40' },
-  { name: 'Relayer Vault Contract', address: '0xF02D24A7bB10d0dBF3da2119d594B7a905dDC091' },
-  { name: 'Public Staker Address', address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' },
-];
+const PROTOCOL_ACCOUNTS: Array<{ name: string; address: string }> = [];
 
 export default function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps) {
   const { open } = useAppKit();
@@ -88,103 +84,9 @@ export default function WalletConnectModal({ isOpen, onClose }: WalletConnectMod
     }, 100);
   };
 
-  const handleConnectDemoWallet = (demoAddr: string) => {
-    try {
-      sessionStorage.setItem('lido_demo_wallet', demoAddr);
-      sessionStorage.setItem('lido_admin_auth', 'true');
-      window.dispatchEvent(new Event('lido_admin_auth_changed'));
-      
-      // Dispatch custom wallet connect event if needed
-      window.dispatchEvent(new CustomEvent('lido_wallet_connected', { detail: { address: demoAddr } }));
-      
-      toast.success('Connected Account Address', {
-        description: `${demoAddr.slice(0, 6)}...${demoAddr.slice(-4)}`
-      });
-      onClose();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const handleConnectDemoWallet = (_demoAddr: string) => { toast.error("Demo wallets are disabled. Connect a real wallet only on a verified protocol interface."); };
 
-  const handleSiweSignIn = async () => {
-    if (!address && typeof window !== 'undefined' && !window.ethereum) {
-      toast.error('Please connect a Web3 wallet first.');
-      return;
-    }
-
-    setIsSiweVerifying(true);
-    try {
-      let targetAddr = address;
-      let signer: any = null;
-
-      if (typeof window !== 'undefined' && window.ethereum) {
-        const provider = new BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        targetAddr = await signer.getAddress();
-      }
-
-      if (!targetAddr) {
-        throw new Error('No wallet address found');
-      }
-
-      // 1. Get Nonce
-      const nonceRes = await fetch('/api/nonce');
-      if (!nonceRes.ok) throw new Error('Failed to fetch SIWE nonce from server');
-      const { nonce } = await nonceRes.json();
-
-      // 2. Prepare SIWE Message
-      const messageObj = new SiweMessage({
-        domain: window.location.host,
-        address: targetAddr,
-        statement: 'Sign in with Ethereum to verify session on Lido Stake Interface.',
-        uri: window.location.origin,
-        version: '1',
-        chainId: 1,
-        nonce,
-      });
-
-      const preparedMessage = messageObj.prepareMessage();
-      let signedMessage = '';
-
-      if (signer) {
-        signedMessage = await signer.signMessage(preparedMessage);
-      } else {
-        signedMessage = await signMessageAsync({
-          account: (address || '0x0000000000000000000000000000000000000000') as `0x${string}`,
-          message: preparedMessage,
-        });
-      }
-
-      // 3. Verify on server
-      const verifyRes = await fetch('/api/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: preparedMessage,
-          signature: signedMessage,
-        }),
-      });
-
-      if (!verifyRes.ok) {
-        throw new Error('SIWE signature verification failed on server');
-      }
-
-      sessionStorage.setItem('lido_admin_auth', 'true');
-      setSiweAuthenticated(true);
-      window.dispatchEvent(new Event('lido_admin_auth_changed'));
-
-      toast.success('SIWE Verification Successful!', {
-        description: 'Session cryptographically verified and active.'
-      });
-    } catch (err: any) {
-      console.error('SIWE Error:', err);
-      toast.error('SIWE Sign In Failed', {
-        description: err?.message || 'Signature rejected or verification error.'
-      });
-    } finally {
-      setIsSiweVerifying(false);
-    }
-  };
+  const handleSiweSignIn = async () => { toast.error("Admin sign-in is disabled until secure server-side administrator authentication is implemented."); };
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
