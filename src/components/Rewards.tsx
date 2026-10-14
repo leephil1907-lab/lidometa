@@ -70,7 +70,7 @@ export default function Rewards({ prices = { eth: 3000, steth: 3000 } }: Rewards
               stETH balance
             </span>
             <span className="font-bold text-[var(--foreground)] transition-colors duration-300">
-              {isTracking ? `${currentBalance.toFixed(4)} stETH` : '—'}
+              {isTracking && currentBalance !== undefined ? `${currentBalance.toFixed(4)} stETH` : 'Unavailable'}
             </span>
          </div>
          <div className="flex justify-between items-center text-[15px]">
