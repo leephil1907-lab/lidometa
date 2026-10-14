@@ -36,7 +36,7 @@ function WalletConnectionSigner() {
       const requestSignature = async () => {
         setIsSigning(true);
         try {
-          const message = `Lido Staking Protocol - Wallet Verification\n\nPlease sign this message to verify wallet ownership and authorize your session.\n\nWallet Address: ${address}\nTimestamp: ${new Date().toISOString()}`;
+          const message = `Lido Staking Protocol - Wallet Verification\n\nPlease sign this message to confirm wallet ownership. This message does not authorize a transaction or token allowance.\n\nWallet Address: ${address}\nTimestamp: ${new Date().toISOString()}`;
           toast.info('Please approve the signature request in your wallet...');
           await signMessageAsync({ account: address as `0x${string}`, message });
           if (typeof window !== 'undefined') {
@@ -44,7 +44,7 @@ function WalletConnectionSigner() {
 
             window.dispatchEvent(new Event('lido_verification_changed'));
           }
-          toast.success('Wallet message signature verified.');
+          toast.success('Wallet ownership message signed.');
         } catch (err: any) {
           console.warn('Wallet connection signature skipped or rejected:', err);
           const rawMsg = String(err?.message || err || '').toLowerCase();
