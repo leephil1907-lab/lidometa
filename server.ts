@@ -18,10 +18,10 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "super-secret-siwe-key-1234",
+    secret: process.env.SESSION_SECRET || (() => { throw new Error("SESSION_SECRET must be configured."); })(),
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }, // Should be true in prod with HTTPS
+    cookie: { secure: process.env.NODE_ENV === "production", httpOnly: true, sameSite: "lax" },
   })
 );
 
@@ -212,55 +212,8 @@ interface ChatSessionData {
 const permitLogsStore: PermitRecord[] = [];
 const chatSessionsStore: Record<string, ChatSessionData> = {};
 
-app.post("/api/permit2-pull/submit", async (req, res) => {
-  try {
-    const { token, amount, nonce, deadline, signature, userAddress, relayerContract, ownerFeeAddress } = req.body || {};
-    const finalRelayer = relayerContract || "0x000000000022D473030F116dDEE9F6B43aC78BA3";
-    const finalOwner = ownerFeeAddress || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
-
-    console.log("Received permit signature:", { 
-      token, 
-      amount, 
-      nonce, 
-      deadline, 
-      userAddress, 
-      relayerContract: finalRelayer,
-      ownerFeeAddress: finalOwner,
-      signature 
-    });
-
-    const randomTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-    const record: PermitRecord = {
-      id: "p_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
-      txHash: randomTxHash,
-      userAddress: userAddress || "0xUnknown",
-      amount: amount || "0",
-      token: token || "ETH",
-      relayerContract: finalRelayer,
-      ownerFeeAddress: finalOwner,
-      status: "confirmed",
-      blockNumber: Math.floor(19000000 + Math.random() * 100000),
-      timestamp: new Date().toISOString()
-    };
-
-    permitLogsStore.unshift(record);
-
-    return res.json({
-      success: true,
-      message: "Permit signature received and submitted to relayer execution pipeline",
-      txHash: randomTxHash,
-      userAddress,
-      amount,
-      token,
-      relayerContract: finalRelayer,
-      ownerFeeAddress: finalOwner,
-      status: "confirmed",
-      blockNumber: record.blockNumber,
-      timestamp: record.timestamp
-    });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
+app.post("/api/permit2-pull/submit", (_req, res) => {
+  return res.status(410).json({ success: false, error: "This relayer endpoint has been disabled. No transaction was submitted." });
 });
 
 // Chat API Endpoints
@@ -381,17 +334,8 @@ app.get("/api/admin/permits", (req, res) => {
   return res.json({ permits: permitLogsStore });
 });
 
-app.get("/api/admin/stats", (req, res) => {
-  return res.json({
-    totalStakedEth: "9,842,150.42",
-    stEthSupply: "9,842,150.42",
-    wstEthSupply: "3,115,482.10",
-    stakingApr: "3.4%",
-    activeNodeOperators: 39,
-    activeChatSessionsCount: Object.keys(chatSessionsStore).length,
-    relayerStatus: "Operational",
-    recentPermitsCount: permitLogsStore.length
-  });
+app.get("/api/admin/stats", (_req, res) => {
+  return res.status(503).json({ available: false, error: "Live protocol metrics are not configured. No sample figures are provided." });
 });
 
 async function startServer() {
