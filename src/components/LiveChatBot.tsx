@@ -119,7 +119,7 @@ export default function LiveChatBot() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsOpen(true)}
               className="relative group bg-[var(--card)] hover:bg-[var(--card)]/90 border border-[var(--primary)]/50 p-3.5 rounded-full shadow-[0_8px_30px_rgba(0,163,255,0.4)] text-white flex items-center space-x-3 transition-all duration-300"
-              title="Click to open Lido Live Support or drag to move"
+              title="Click to open support inbox or drag to move"
             >
               {/* Outer subtle pulsing aura */}
               <span className="absolute -inset-1 rounded-full bg-[var(--primary)]/20 animate-pulse opacity-40 pointer-events-none" />
@@ -135,11 +135,11 @@ export default function LiveChatBot() {
 
               <div className="hidden sm:flex flex-col text-left pr-1 pointer-events-none">
                 <span className="text-[13px] font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                  Lido Assistant
+                  Support
                   <Sparkles size={12} className="text-[var(--primary)] animate-pulse" />
                 </span>
                 <span className="text-[11px] text-[var(--muted)] flex items-center gap-1">
-                  <span>Live 24/7 Support</span>
+                  <span>Messages are reviewed when available</span>
                   <GripHorizontal size={12} className="text-[var(--muted)] opacity-60 ml-1" />
                 </span>
               </div>
@@ -185,7 +185,7 @@ export default function LiveChatBot() {
 
                 <div>
                   <div className="flex items-center space-x-1.5">
-                    <span className="font-bold text-[13px] text-[var(--foreground)]">Lido Live Support</span>
+                    <span className="font-bold text-[13px] text-[var(--foreground)]">support inbox</span>
                     {isAdminConnected ? (
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
                         <Shield size={9} /> Admin Active
@@ -267,7 +267,7 @@ export default function LiveChatBot() {
                       >
                         {!isUser && (
                           <div className="text-[10px] font-bold mb-1 opacity-70 flex items-center justify-between">
-                            <span>{isAdmin ? '🛡️ Lido Admin' : '🤖 Lido Assistant'}</span>
+                            <span>{isAdmin ? '🛡️ Administrator' : '🤖 Support'}</span>
                           </div>
                         )}
                         <p className="break-words">{msg.text}</p>
@@ -307,7 +307,7 @@ export default function LiveChatBot() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={isAdminConnected ? 'Message Lido Admin...' : 'Ask Lido Bot or request support...'}
+                placeholder={isAdminConnected ? 'Message Administrator...' : 'Ask Support or request support...'}
                 className="flex-1 bg-[var(--card)] border border-[var(--border)] rounded-full px-4 py-2 text-[13px] text-[var(--foreground)] placeholder-[var(--input-placeholder)] outline-none focus:border-[var(--primary)] transition-colors select-text"
               />
               <button
