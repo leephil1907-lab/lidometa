@@ -233,7 +233,7 @@ app.get("/api/admin/me", (req, res) => {
     return res.status(403).json({ authenticated: false, error: "This wallet is not authorized for administrator access." });
   }
   return res.json({ authenticated: true, address: (req.session as any).siwe.address });
-}
+});
 
 app.post("/api/permit2-pull/submit", (_req, res) => {
   return res.status(410).json({ success: false, error: "This relayer endpoint has been disabled. No transaction was submitted." });
