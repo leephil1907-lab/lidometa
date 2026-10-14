@@ -1,33 +1,25 @@
 import { useState, useEffect } from 'react';
 
 export function usePriceData() {
-  const [prices, setPrices] = useState({ eth: 3000, steth: 3000 });
+  const [prices, setPrices] = useState({ eth: 0, steth: 0 });
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
+    let active = true;
     const fetchPrices = async () => {
       try {
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,staked-ether&vs_currencies=usd');
-        if (response.ok) {
-          const data = await response.json();
-          setPrices({
-            eth: data.ethereum?.usd || 3000,
-            steth: data['staked-ether']?.usd || 3000,
-          });
-        }
+        if (!response.ok) throw new Error('Price service unavailable');
+        const data = await response.json();
+        const eth = data.ethereum?.usd;
+        const steth = data['staked-ether']?.usd;
+        if (active && Number.isFinite(eth) && Number.isFinite(steth)) setPrices({ eth, steth });
       } catch {
-        // Fallback gracefully without console noise
-      } finally {
-        setLoading(false);
-      }
+        if (active) setPrices({ eth: 0, steth: 0 });
+      } finally { if (active) setLoading(false); }
     };
-
     fetchPrices();
-    
-    // Refresh every 60 seconds
     const interval = setInterval(fetchPrices, 60000);
-    return () => clearInterval(interval);
+    return () => { active = false; clearInterval(interval); };
   }, []);
-
   return { prices, loading };
 }
