@@ -89,10 +89,10 @@ export default function Stake({ prices = { eth: 3000, steth: 3000 } }: StakeProp
           const costInUsd = totalGasEth * prices.eth;
           setGasCostUSD(costInUsd.toFixed(2));
         } else {
-          setGasCostUSD('0.05');
+          setGasCostUSD(null);
         }
       } catch {
-        setGasCostUSD('0.05');
+        setGasCostUSD(null);
       } finally {
         setIsEstimatingGas(false);
       }
