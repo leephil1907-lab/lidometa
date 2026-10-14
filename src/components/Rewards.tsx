@@ -20,7 +20,7 @@ interface RewardsProps {
 
 type Period = '7D' | '30D' | '90D' | '1Y';
 
-export default function Rewards({ prices = { eth: 3000, steth: 3000 } }: RewardsProps) {
+export default function Rewards({ prices = { eth: 0, steth: 0 } }: RewardsProps) {
   const { open } = useAppKit();
   const { isConnected, address: wagmiAddress } = useAccount();
   const [addressInput, setAddressInput] = useState('');
