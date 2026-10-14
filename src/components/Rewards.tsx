@@ -80,7 +80,7 @@ export default function Rewards({ prices = { eth: 3000, steth: 3000 } }: Rewards
             </span>
             <div className="text-right">
               <span className="font-bold text-[var(--primary)] transition-colors duration-300">
-                {isTracking ? `+${totalRewarded.toFixed(4)} stETH` : '—'}
+                {isTracking && totalRewarded !== undefined ? `+${totalRewarded.toFixed(4)} stETH` : 'Unavailable'}
               </span>
               {isTracking && (
                 <span className="text-[12px] text-[var(--muted)] block">
